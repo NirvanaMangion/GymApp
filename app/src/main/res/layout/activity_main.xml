@@ -23,7 +23,7 @@
             android:id="@+id/striveTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text=""
+            android:text="Strive"
             android:textSize="55sp"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
@@ -36,7 +36,7 @@
             android:layout_weight="1" />
 
         <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/phoneSignup"
+            android:id="@+id/btnPhoneSignup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Sign up with phone number"
@@ -64,6 +64,6 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="16dp"
             android:textColor="#FFFFFF"
-            android:text="" />
+            android:text="Already have an account? Log in" />
     </LinearLayout>
 </FrameLayout>

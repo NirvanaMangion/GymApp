@@ -1,4 +1,6 @@
 package com.nirvana.gymapp
+
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.os.Bundle
 import android.text.Spannable
@@ -9,15 +11,19 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Button
+import android.widget.CheckBox
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.graphics.toColorInt
 
-class EmailSignupActivity : AppCompatActivity() {
+class PhoneSignupActivity : AppCompatActivity() {
 
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_email_signup)
+        setContentView(R.layout.activity_phone_signup)
 
         // Set up the Toolbar
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
@@ -28,14 +34,41 @@ class EmailSignupActivity : AppCompatActivity() {
         supportActionBar?.setTitle("")  // Remove default title
 
         // Custom title setup (Spannable String for the title)
-        val titleView = findViewById<TextView>(R.id.striveTitle)
-        val styledTitle = SpannableString("Strive")
+        val titleView = findViewById<TextView>(R.id.signUpTitle)
+        val styledTitle = SpannableString("Sign up")
         styledTitle.setSpan(
-            ForegroundColorSpan("#FFD600".toColorInt()),  // Use toColorInt() for the color
-            0, 1,
+            ForegroundColorSpan(Color.parseColor("#FFFFFF")),  // Use white color for "Sign up"
+            0, styledTitle.length,
             Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
         )
         titleView.text = styledTitle
+
+        // Set custom title for "Strive"
+        val striveTitle = findViewById<TextView>(R.id.striveTitle)
+        val striveStyledTitle = SpannableString("Strive")
+        striveStyledTitle.setSpan(
+            ForegroundColorSpan(Color.parseColor("#FFD600")),  // Use yellow color for "S"
+            0, 1,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        striveTitle.text = striveStyledTitle
+
+        // Set up the Continue Button
+        val continueBtn = findViewById<Button>(R.id.continueBtn)
+        continueBtn.setOnClickListener {
+            // Check if phone number is valid
+            val phoneNumber = findViewById<EditText>(R.id.phoneInput).text.toString()
+            val username = findViewById<EditText>(R.id.usernameInput).text.toString()
+            val password = findViewById<EditText>(R.id.passwordInput).text.toString()
+
+            if (phoneNumber.isEmpty() || username.isEmpty() || password.isEmpty()) {
+                // Show a toast or an error if any of the fields are empty
+            } else {
+                // Handle the continue action (e.g., navigate to the next screen)
+                // Uncomment the below line to proceed to the next screen (if needed)
+                // startActivity(Intent(this, NextActivity::class.java))
+            }
+        }
     }
 
     // Override dispatchTouchEvent to handle keyboard dismissal
@@ -54,7 +87,7 @@ class EmailSignupActivity : AppCompatActivity() {
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        finish()  // Closes this activity and goes back
+        finish()  // Go back to the previous activity
         return true
     }
 }

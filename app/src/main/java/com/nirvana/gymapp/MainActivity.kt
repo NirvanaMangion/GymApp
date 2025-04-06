@@ -43,5 +43,14 @@ class MainActivity : AppCompatActivity() {
         emailSignupBtn.setOnClickListener {
             startActivity(Intent(this, EmailSignupActivity::class.java))
         }
+
+        // Launch Phone Sign Up Activity
+        // Launch Phone Sign Up Activity
+        val phoneSignupBtn = findViewById<Button>(R.id.btnPhoneSignup)  // This should match the ID in the XML
+        phoneSignupBtn.setOnClickListener {
+            // Start the PhoneSignupActivity when the button is clicked
+            startActivity(Intent(this, PhoneSignupActivity::class.java))
+        }
+
     }
 }
