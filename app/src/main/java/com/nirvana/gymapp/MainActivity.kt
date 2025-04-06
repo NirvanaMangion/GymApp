@@ -7,6 +7,8 @@ import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
 import android.widget.TextView
+import android.content.Intent
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
@@ -14,22 +16,32 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Set colored "Strive"
+        // Style "Strive"
         val titleView = findViewById<TextView>(R.id.striveTitle)
         val title = SpannableString("Strive")
-        title.setSpan(ForegroundColorSpan(Color.parseColor("#FFD600")), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        title.setSpan(
+            ForegroundColorSpan(Color.parseColor("#FFD600")),
+            0, 1,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
         titleView.text = title
 
-        // Set "Already have an account? Log in" with Log in in purple
+        // Log in text color
         val loginView = findViewById<TextView>(R.id.loginText)
         val loginText = SpannableStringBuilder("Already have an account? Log in")
-        val loginStart = loginText.indexOf("Log in")
-        val loginEnd = loginStart + "Log in".length
+        val start = loginText.indexOf("Log in")
+        val end = start + "Log in".length
         loginText.setSpan(
             ForegroundColorSpan(Color.parseColor("#AA88FF")),
-            loginStart, loginEnd,
+            start, end,
             Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
         )
         loginView.text = loginText
+
+        // Launch Email Sign Up Activity
+        val emailSignupBtn = findViewById<Button>(R.id.emailSignup)
+        emailSignupBtn.setOnClickListener {
+            startActivity(Intent(this, EmailSignupActivity::class.java))
+        }
     }
 }

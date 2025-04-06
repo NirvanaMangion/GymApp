@@ -5,7 +5,6 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <!-- Background Image -->
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -13,7 +12,6 @@
         android:src="@drawable/gymbackground"
         android:contentDescription="Background" />
 
-    <!-- Overlay UI -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -21,7 +19,6 @@
         android:padding="24dp"
         android:gravity="bottom">
 
-        <!-- Title at top -->
         <TextView
             android:id="@+id/striveTitle"
             android:layout_width="wrap_content"
@@ -31,37 +28,34 @@
             android:textStyle="bold"
             android:textColor="#FFFFFF"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="44dp" />
+            android:layout_marginTop="35dp" />
 
-        <!-- Spacer to push buttons down -->
         <Space
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-        <!-- Phone Sign-Up Button -->
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/phoneSignup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Sign up with phone number"
             android:textAllCaps="false"
             android:textColor="#000000"
-            android:background="@drawable/rounded_white_button"
+            android:background="@drawable/rounded_background"
+            android:backgroundTint="#FFFFFF"
             android:layout_marginBottom="16dp" />
 
-
-        <!-- Email Sign-Up Button -->
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/emailSignup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Sign up with email"
             android:textAllCaps="false"
             android:textColor="#FFFFFF"
-            android:background="@drawable/rounded_purple_button" />
+            android:background="@drawable/rounded_background"
+            android:backgroundTint="#7A4FE2" />
 
-        <!-- Bottom Login Line -->
         <TextView
             android:id="@+id/loginText"
             android:layout_width="wrap_content"
@@ -70,7 +64,6 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="16dp"
             android:textColor="#FFFFFF"
-            android:text=""
-            tools:ignore="HardcodedText" />
+            android:text="" />
     </LinearLayout>
 </FrameLayout>
