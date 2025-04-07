@@ -35,20 +35,18 @@
         android:layout_height="match_parent"
         android:layout_marginTop="?attr/actionBarSize"
         android:layout_marginBottom="56dp"
-        android:padding="0dp">  <!-- Remove ScrollView padding -->
-
+        android:padding="0dp">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Poster Section: Edge-to-edge image -->
+            <!-- Poster Section: Edge-to-edge image with a tiny margin -->
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="250dp"
                 android:layout_margin="5dp"
                 android:layout_marginBottom="16dp">
-
                 <ImageView
                     android:id="@+id/posterImageView"
                     android:layout_width="match_parent"
@@ -57,14 +55,12 @@
                     android:clipToOutline="true"
                     android:scaleType="centerCrop"
                     android:src="@drawable/poster" />
-
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="top|start"
                     android:orientation="vertical"
                     android:padding="20dp">
-
                     <TextView
                         android:id="@+id/textPush"
                         android:layout_width="wrap_content"
@@ -73,7 +69,6 @@
                         android:textColor="@android:color/white"
                         android:textSize="35sp"
                         android:textStyle="bold" />
-
                     <TextView
                         android:id="@+id/textPast"
                         android:layout_width="wrap_content"
@@ -82,7 +77,6 @@
                         android:textColor="@android:color/white"
                         android:textSize="45sp"
                         android:textStyle="bold" />
-
                     <TextView
                         android:id="@+id/textLimits"
                         android:layout_width="wrap_content"
@@ -92,20 +86,33 @@
                         android:textSize="55sp"
                         android:textStyle="bold" />
                 </LinearLayout>
-
             </FrameLayout>
 
-            <!-- Bottom Content Container: Adds extra padding/inset -->
+            <!-- Bottom Content Container with inset padding -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="16dp"
+                android:paddingTop="8dp"
+                android:paddingEnd="16dp">
+                <TextView
+                    android:id="@+id/myRoutineTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp"
+                    android:text="@string/my_routine"
+                    android:textColor="@android:color/white"
+                    android:textSize="22sp" />
 
-
-                <!-- Parent container for the buttons -->
+                <!-- Buttons Container -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="start"
                     android:layout_marginBottom="16dp">
-
                     <Button
                         android:id="@+id/addRoutineBtn"
                         android:layout_width="wrap_content"
@@ -113,13 +120,12 @@
                         android:minHeight="0dp"
                         android:minWidth="0dp"
                         android:padding="6dp"
-                        android:layout_marginEnd="4dp"
+                        android:layout_marginEnd="16dp"
                         android:backgroundTint="#FFD600"
                         android:text="@string/add_routine"
                         android:textAllCaps="false"
                         android:textColor="@android:color/black"
                         android:textSize="13sp" />
-
                     <Button
                         android:id="@+id/viewAllRoutinesBtn"
                         android:layout_width="wrap_content"
@@ -134,52 +140,35 @@
                         android:textSize="13sp" />
                 </LinearLayout>
 
-                <!-- Light gray box underneath the buttons -->
+                <!-- Two-box layout for "No routine added yet" -->
                 <LinearLayout
-                    android:id="@+id/noRoutineContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:orientation="horizontal"
                     android:layout_marginTop="8dp"
-                    android:layout_marginBottom="16dp"
-                    android:background="@drawable/rounded_background"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:id="@+id/noRoutineText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="No routine added yet"
-                        android:textColor="#616161"
-                        android:textSize="16sp" />
-                </LinearLayout>
-
-                <!-- Explore Section -->
-                <TextView
-                    android:id="@+id/exploreTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:text="@string/explore"
-                    android:textColor="@android:color/white"
-                    android:textSize="20sp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <View
+                    android:layout_marginBottom="16dp">
+                    <FrameLayout
+                        android:id="@+id/noRoutineContainer"
                         android:layout_width="0dp"
                         android:layout_height="80dp"
+                        android:layout_weight="1"
                         android:layout_marginEnd="4dp"
-                        android:layout_weight="1"
-                        android:background="#CCCCCC" />
-
-                    <View
+                        android:background="#CCCCCC">
+                        <TextView
+                            android:id="@+id/noRoutineText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:text="No routine added yet"
+                            android:textColor="#616161"
+                            android:textSize="16sp" />
+                    </FrameLayout>
+                    <FrameLayout
                         android:layout_width="0dp"
                         android:layout_height="80dp"
-                        android:layout_marginStart="4dp"
                         android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:visibility="invisible"
                         android:background="#CCCCCC" />
                 </LinearLayout>
             </LinearLayout>
@@ -196,35 +185,71 @@
         android:background="#444444"
         android:gravity="center">
 
-        <ImageView
-            android:id="@+id/navRoutine"
+        <!-- Profile Item -->
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:contentDescription="@string/routine"
-            android:padding="8dp"
-            android:scaleType="centerInside"
-            android:src="@drawable/personicon" />
+            android:gravity="center"
+            android:orientation="vertical">
+            <ImageView
+                android:id="@+id/navProfile"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/personicon"
+                android:contentDescription="@string/profile" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Profile"
+                android:textColor="@android:color/white"
+                android:textSize="10sp" />
+        </LinearLayout>
 
-        <ImageView
-            android:id="@+id/navHome"
+        <!-- Home Item -->
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:contentDescription="@string/home"
-            android:padding="8dp"
-            android:scaleType="centerInside"
-            android:src="@drawable/homeicon" />
+            android:gravity="center"
+            android:orientation="vertical">
+            <ImageView
+                android:id="@+id/navHome"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/homeicon"
+                android:contentDescription="@string/home" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Home"
+                android:textColor="@android:color/white"
+                android:textSize="10sp" />
+        </LinearLayout>
 
-        <ImageView
-            android:id="@+id/navSettings"
+        <!-- Settings Item -->
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:contentDescription="@string/settings"
-            android:padding="8dp"
-            android:scaleType="centerInside"
-            android:src="@drawable/settingsicon" />
+            android:gravity="center"
+            android:orientation="vertical">
+            <ImageView
+                android:id="@+id/navSettings"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/settingsicon"
+                android:contentDescription="@string/settings" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Settings"
+                android:textColor="@android:color/white"
+                android:textSize="10sp" />
+        </LinearLayout>
     </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
