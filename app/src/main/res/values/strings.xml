@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">GymApp</string>
+    <string name="measurements_title">Measurements</string>
+        <string name="home">Home</string>
+        <string name="push_past_limits">Push\npast\nlimits</string>
+        <string name="my_routine">My Routine</string>
+        <string name="add_routine">Add Routine</string>
+        <string name="view_all_routines">View all my routines</string>
+        <string name="explore">Explore</string>
+        <string name="routine">Routine</string>
+        <string name="settings">Settings</string>
+
+
+
+
 </resources>
+

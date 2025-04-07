@@ -1,0 +1,180 @@
+
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    android:id="@+id/coordinatorLayout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:background="#121212">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#444444"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        android:fitsSystemWindows="true"
+        android:layout_gravity="top"
+        android:titleTextColor="#FFFFFF"
+        android:contentInsetStart="0dp"
+        android:contentInsetEnd="0dp">
+
+        <TextView
+            android:id="@+id/selectUnitsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select Units"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            android:gravity="start"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="90dp"
+            android:padding="16dp" />
+    </androidx.appcompat.widget.Toolbar>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:padding="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Weight"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="24dp">
+
+                <Button
+                    android:id="@+id/kgBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Kg"
+                    android:textColor="#FFFFFF"
+                    android:background="@drawable/rounded_background"
+                    android:backgroundTint="#FFD600"
+                    android:backgroundTintMode="src_in"
+                    android:layout_marginEnd="8dp" />
+
+                <Button
+                    android:id="@+id/lbsBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="lbs"
+                    android:textColor="#000000"
+                    android:background="@drawable/rounded_background"
+                    android:backgroundTint="#FFFFFF"
+                    android:backgroundTintMode="src_in"
+                    android:layout_marginStart="8dp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Distance"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="24dp">
+
+                <Button
+                    android:id="@+id/kmBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Kilometres"
+                    android:textColor="#FFFFFF"
+                    android:background="@drawable/rounded_background"
+                    android:backgroundTint="#FFD600"
+                    android:backgroundTintMode="src_in"
+                    android:layout_marginEnd="8dp" />
+
+                <Button
+                    android:id="@+id/milesBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="miles"
+                    android:textColor="#000000"
+                    android:background="@drawable/rounded_background"
+                    android:backgroundTint="#FFFFFF"
+                    android:backgroundTintMode="src_in"
+                    android:layout_marginStart="8dp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Body Measurements"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="32dp">
+
+                <Button
+                    android:id="@+id/cmBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="cm"
+                    android:textColor="#FFFFFF"
+                    android:background="@drawable/rounded_background"
+                    android:backgroundTint="#FFD600"
+                    android:backgroundTintMode="src_in"
+                    android:layout_marginEnd="8dp" />
+
+                <Button
+                    android:id="@+id/inBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="in"
+                    android:textColor="#000000"
+                    android:background="@drawable/rounded_background"
+                    android:backgroundTint="#FFFFFF"
+                    android:backgroundTintMode="src_in"
+                    android:layout_marginStart="8dp" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/continueBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Continue"
+                android:textAllCaps="true"
+                android:textColor="#000000"
+                android:backgroundTint="#FFD600"
+                android:padding="12dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="32dp" />
+        </LinearLayout>
+    </ScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+
+

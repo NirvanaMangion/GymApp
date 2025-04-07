@@ -1,12 +1,13 @@
 package com.nirvana.gymapp
-import android.graphics.Color
+
+import android.content.Intent
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
 import android.view.MotionEvent
-import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -36,6 +37,14 @@ class EmailSignupActivity : AppCompatActivity() {
             Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
         )
         titleView.text = styledTitle
+
+        // Inside onCreate method of EmailSignupActivity
+        val continueButton = findViewById<Button>(R.id.continueBtn)
+        continueButton.setOnClickListener {
+            // Navigate to UnitSectionActivity when Continue is clicked
+            val intent = Intent(this, UnitSelectionActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     // Override dispatchTouchEvent to handle keyboard dismissal
