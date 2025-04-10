@@ -1,0 +1,73 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#121212">
+
+    <!-- Scrollable Content -->
+    <ScrollView
+        android:id="@+id/scrollContent"
+        android:layout_above="@+id/saveRoutineButton"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Routine Name -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Routine Name"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:layout_marginBottom="8dp" />
+
+            <EditText
+                android:id="@+id/routineNameInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="e.g. Push Day"
+                android:background="#1E1E1E"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#888888"
+                android:padding="12dp"
+                android:textSize="14sp"
+                android:layout_marginBottom="24dp" />
+
+            <!-- Add Exercise -->
+            <Button
+                android:id="@+id/addExerciseBtn"
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Add Exercise"
+                android:textAllCaps="false"
+                android:backgroundTint="#4D4D4D"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:padding="10dp"
+                android:layout_marginBottom="32dp" />
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Save Button (bottom center) -->
+    <Button
+        android:id="@+id/saveRoutineButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="24dp"
+        android:backgroundTint="#FFD600"
+        android:text="Save"
+        android:textColor="@android:color/black"
+        android:textSize="16sp"
+        android:textAllCaps="false"
+        android:paddingLeft="32dp"
+        android:paddingRight="32dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp" />
+</RelativeLayout>

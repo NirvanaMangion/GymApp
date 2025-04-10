@@ -1,69 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/coordinatorLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:fitsSystemWindows="true"
+    android:background="#121212">
 
-    <ImageView
+    <!-- Custom toolbar included at the top -->
+    <include layout="@layout/custom_toolbar" />
+
+    <!-- Fragment container below toolbar -->
+    <FrameLayout
+        android:id="@+id/fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        android:src="@drawable/gymbackground"
-        android:contentDescription="Background" />
+        android:layout_marginTop="?attr/actionBarSize"
+        android:layout_marginBottom="56dp" />
 
+    <!-- Bottom nav bar -->
     <LinearLayout
+        android:id="@+id/bottomNav"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="24dp"
-        android:gravity="bottom">
+        android:layout_height="56dp"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal"
+        android:background="#444444"
+        android:gravity="center">
 
-        <TextView
-            android:id="@+id/striveTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Strive"
-            android:textSize="55sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="35dp" />
+        <!-- Profile (Left) -->
+        <LinearLayout
+            android:id="@+id/navProfile"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/personicon"
+                android:contentDescription="Profile"
+                android:scaleType="centerInside" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Profile"
+                android:textColor="@android:color/white"
+                android:textSize="10sp" />
+        </LinearLayout>
 
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+        <!-- Home (Center) -->
+        <LinearLayout
+            android:id="@+id/navHome"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/homeicon"
+                android:contentDescription="Home"
+                android:scaleType="centerInside" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Home"
+                android:textColor="@android:color/white"
+                android:textSize="10sp" />
+        </LinearLayout>
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnPhoneSignup"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Sign up with phone number"
-            android:textAllCaps="false"
-            android:textColor="#000000"
-            android:background="@drawable/rounded_background"
-            android:backgroundTint="#FFFFFF"
-            android:layout_marginBottom="16dp" />
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/emailSignup"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Sign up with email"
-            android:textAllCaps="false"
-            android:textColor="#FFFFFF"
-            android:background="@drawable/rounded_background"
-            android:backgroundTint="#7A4FE2" />
-
-        <TextView
-            android:id="@+id/loginText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="16dp"
-            android:textColor="#FFFFFF"
-            android:text="Already have an account? Log in" />
+        <!-- Settings (Right) -->
+        <LinearLayout
+            android:id="@+id/navSettings"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/settingsicon"
+                android:contentDescription="Settings"
+                android:scaleType="centerInside" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Settings"
+                android:textColor="@android:color/white"
+                android:textSize="10sp" />
+        </LinearLayout>
     </LinearLayout>
-</FrameLayout>
+
+
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

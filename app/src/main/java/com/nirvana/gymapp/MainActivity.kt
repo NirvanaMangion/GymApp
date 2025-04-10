@@ -1,56 +1,87 @@
 package com.nirvana.gymapp
 
-import android.graphics.Color
 import android.os.Bundle
-import android.text.Spannable
-import android.text.SpannableString
-import android.text.SpannableStringBuilder
-import android.text.style.ForegroundColorSpan
+import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
-import android.content.Intent
-import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.fragment.app.Fragment
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var toolbar: Toolbar
+    private lateinit var titleText: TextView
+    private lateinit var customBack: ImageView
+    private lateinit var bottomNav: View
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Style "Strive"
-        val titleView = findViewById<TextView>(R.id.striveTitle)
-        val title = SpannableString("Strive")
-        title.setSpan(
-            ForegroundColorSpan(Color.parseColor("#FFD600")),
-            0, 1,
-            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-        )
-        titleView.text = title
+        // Find toolbar components
+        toolbar = findViewById(R.id.toolbar)
+        titleText = findViewById(R.id.custom_title)
+        customBack = findViewById(R.id.custom_back)
+        bottomNav = findViewById(R.id.bottomNav)
 
-        // Log in text color
-        val loginView = findViewById<TextView>(R.id.loginText)
-        val loginText = SpannableStringBuilder("Already have an account? Log in")
-        val start = loginText.indexOf("Log in")
-        val end = start + "Log in".length
-        loginText.setSpan(
-            ForegroundColorSpan(Color.parseColor("#AA88FF")),
-            start, end,
-            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-        )
-        loginView.text = loginText
+        // Set as support action bar
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
 
-        // Launch Email Sign Up Activity
-        val emailSignupBtn = findViewById<Button>(R.id.emailSignup)
-        emailSignupBtn.setOnClickListener {
-            startActivity(Intent(this, EmailSignupActivity::class.java))
+        // Back button click
+        customBack.setOnClickListener {
+            onBackPressed()
         }
 
-        // Launch Phone Sign Up Activity
-        // Launch Phone Sign Up Activity
-        val phoneSignupBtn = findViewById<Button>(R.id.btnPhoneSignup)  // This should match the ID in the XML
-        phoneSignupBtn.setOnClickListener {
-            // Start the PhoneSignupActivity when the button is clicked
-            startActivity(Intent(this, PhoneSignupActivity::class.java))
+        // Load fragment based on intent extra
+        when (intent.getStringExtra("start")) {
+            "email" -> loadFragment(EmailSignupFragment(), "Sign up", true, false)
+            "phone" -> loadFragment(PhoneSignupFragment(), "Sign up", true, false)
+            "unit" -> loadFragment(UnitSelectionFragment(), "Choose Unit", true, false)
+            else    -> loadFragment(HomeFragment(), "Home", false, true)
         }
 
+        // Bottom nav buttons
+        findViewById<View>(R.id.navHome).setOnClickListener {
+            loadFragment(HomeFragment(), "Home", false, true)
+        }
+
+        findViewById<View>(R.id.navProfile).setOnClickListener {
+            loadFragment(ProfileFragment(), "Profile", false, true) // hide back button here
+        }
+
+        findViewById<View>(R.id.navSettings).setOnClickListener {
+            // Settings fragment placeholder
+        }
+        findViewById<View>(R.id.navSettings).setOnClickListener {
+            loadFragment(SettingsFragment(), "Settings", false, true)
+        }
+
+    }
+
+
+    fun loadFragment(
+        fragment: Fragment,
+        title: String,
+        showUpArrow: Boolean,
+        showBottomNav: Boolean
+    ) {
+        titleText.text = title
+        customBack.visibility = if (showUpArrow) View.VISIBLE else View.GONE
+        bottomNav.visibility = if (showBottomNav) View.VISIBLE else View.GONE
+
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, fragment)
+            .addToBackStack(null)
+            .commit()
+    }
+
+    override fun onBackPressed() {
+        if (supportFragmentManager.backStackEntryCount > 1) {
+            supportFragmentManager.popBackStack()
+        } else {
+            finish()
+        }
     }
 }

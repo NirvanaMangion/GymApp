@@ -10,9 +10,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GymApp">
 
-        <!-- Main Activity (Launcher) -->
+        <!-- Launcher Activity: Frontpage -->
         <activity
-            android:name=".MainActivity"
+            android:name=".FrontpageActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -20,31 +20,9 @@
             </intent-filter>
         </activity>
 
-        <!-- Email Signup Activity -->
+        <!-- MainActivity hosts fragments -->
         <activity
-            android:name=".EmailSignupActivity"
-            android:label="Sign up"
-            android:theme="@style/Theme.Material3.DayNight.NoActionBar"
-            android:windowSoftInputMode="adjustPan" />
-
-        <!-- Phone Signup Activity -->
-        <activity
-            android:name=".PhoneSignupActivity"
-            android:label="Sign up with Phone"
-            android:parentActivityName=".MainActivity"
-            android:theme="@style/Theme.Material3.DayNight.NoActionBar"
-            android:windowSoftInputMode="adjustPan" />
-
-        <!-- Unit Selection Activity -->
-        <activity
-            android:name=".UnitSelectionActivity"
+            android:name=".MainActivity"
             android:exported="false" />
-
-        <!-- Home Page Activity -->
-        <activity
-            android:name=".HomepageActivity"
-            android:exported="false" />
-
     </application>
-
 </manifest>
