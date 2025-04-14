@@ -1,48 +1,95 @@
 package com.nirvana.gymapp
 
 import android.os.Bundle
-import android.text.Spannable
 import android.text.SpannableString
+import android.text.Spannable
 import android.text.style.ForegroundColorSpan
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.Button
-import android.widget.TextView
+import android.view.*
+import android.view.inputmethod.InputMethodManager
+import android.widget.*
+import android.content.Context
 import androidx.core.graphics.toColorInt
 import androidx.fragment.app.Fragment
 
 class PhoneSignupFragment : Fragment() {
 
+    private lateinit var userDb: UserDatabase
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment. Make sure this layout does not include its own toolbar.
+    ): View {
         val view = inflater.inflate(R.layout.fragment_phone_signup, container, false)
+        userDb = UserDatabase(requireContext())
 
-        // OPTIONAL: If there's a "Strive" TextView (for visual branding) in the layout,
-        // style the text as needed. (If you don't want it, you can remove this section.)
-        val striveTitle = view.findViewById<TextView>(R.id.striveTitle)
-        striveTitle?.let {
+        val title = view.findViewById<TextView>(R.id.striveTitle)
+        val usernameInput = view.findViewById<EditText>(R.id.usernameInput)
+        val countryCodeInput = view.findViewById<EditText>(R.id.countryCodeInput)
+        val phoneInput = view.findViewById<EditText>(R.id.phoneInput)
+        val passwordInput = view.findViewById<EditText>(R.id.passwordInput)
+        val termsCheckbox = view.findViewById<CheckBox>(R.id.termsCheckbox)
+        val continueBtn = view.findViewById<Button>(R.id.continueBtn)
+
+        title?.let {
             val styled = SpannableString("Strive")
-            // Change the color of the first character to #FFD600
-            styled.setSpan(ForegroundColorSpan("#FFD600".toColorInt()),
-                0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            styled.setSpan(ForegroundColorSpan("#FFD600".toColorInt()), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             it.text = styled
         }
 
-        // Set up the Continue button to navigate to the UnitSelectionFragment.
-        val continueBtn = view.findViewById<Button>(R.id.continueBtn)
         continueBtn.setOnClickListener {
-            // Calling our public loadFragment method in MainActivity:
-            (activity as MainActivity).loadFragment(
-                fragment = UnitSelectionFragment(),
-                title = "Choose Unit",
-                showUpArrow = true,
-                showBottomNav = false
-            )
+            val username = usernameInput.text?.toString()?.trim() ?: ""
+            val code = countryCodeInput.text?.toString()?.trim() ?: ""
+            val phone = phoneInput.text?.toString()?.trim() ?: ""
+            val password = passwordInput.text?.toString()?.trim() ?: ""
+
+            val fullPhone = "$code$phone"
+
+            when {
+                username.isEmpty() || code.isEmpty() || phone.isEmpty() || password.isEmpty() ->
+                    toast("Please fill in all fields.")
+
+                !code.startsWith("+") || code.length < 2 ->
+                    toast("Enter a valid country code starting with +")
+
+                password.length < 6 || !password.any { it.isDigit() } || !password.any { it.isLetter() } ->
+                    toast("Password must be at least 6 characters, with letters and numbers.")
+
+                !termsCheckbox.isChecked ->
+                    toast("You must accept the terms.")
+
+                userDb.checkUserExists(username) ->
+                    toast("Username already exists.")
+
+                else -> {
+                    userDb.addUser(username, null, fullPhone, password)
+                    toast("Account created!")
+                    val fragment = UnitSelectionFragment()
+                    fragment.arguments = Bundle().apply {
+                        putString("username", username)  //
+                    }
+                    (activity as MainActivity).loadFragment(
+                        fragment,
+                        title = "Choose Unit",
+                        showUpArrow = true,
+                        showBottomNav = false
+                    )
+                }
+            }
+        }
+
+        view.setOnTouchListener { v, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                view.clearFocus()
+                val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.hideSoftInputFromWindow(view.windowToken, 0)
+                v.performClick()
+            }
+            false
         }
 
         return view
+    }
+
+    private fun toast(msg: String) {
+        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
     }
 }

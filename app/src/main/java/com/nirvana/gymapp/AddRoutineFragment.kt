@@ -33,6 +33,15 @@ class AddRoutineFragment : Fragment() {
             Toast.makeText(requireContext(), "Add Exercise clicked", Toast.LENGTH_SHORT).show()
         }
 
+        addExerciseButton.setOnClickListener {
+            (activity as MainActivity).loadFragment(
+                AddExerciseFragment(),
+                title = "Select Exercise",
+                showUpArrow = true,
+                showBottomNav = false
+            )
+        }
+
         return view
     }
 }

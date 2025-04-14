@@ -14,7 +14,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Welcome to"
+            android:text="Welcome back to"
             android:textSize="32sp"
             android:textColor="#FFFFFF"
             android:layout_gravity="center_horizontal"
@@ -31,52 +31,13 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="56dp" />
 
-        <!-- Country Code + Phone Input -->
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Phone Number" android:textColor="#FFFFFF" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
-
-            <EditText
-                android:id="@+id/countryCodeInput"
-                android:layout_width="80dp"
-                android:layout_height="wrap_content"
-                android:hint="+"
-                android:inputType="phone"
-                android:maxLength="5"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#B0B0B0"
-                android:backgroundTint="#888888"
-                android:padding="12dp"
-                android:layout_marginEnd="8dp"
-                android:imeOptions="actionNext" />
-
-            <EditText
-                android:id="@+id/phoneInput"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:hint="phone number*"
-                android:inputType="phone"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#B0B0B0"
-                android:backgroundTint="#888888"
-                android:padding="12dp"
-                android:imeOptions="actionNext" />
-        </LinearLayout>
-
-        <!-- Username -->
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:text="Username" android:textColor="#FFFFFF" />
         <EditText
             android:id="@+id/usernameInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="username*"
+            android:hint="username"
             android:textColor="#FFFFFF"
             android:textColorHint="#B0B0B0"
             android:backgroundTint="#888888"
@@ -84,37 +45,26 @@
             android:layout_marginBottom="28dp"
             android:imeOptions="actionNext" />
 
-        <!-- Password -->
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:text="Password" android:textColor="#FFFFFF" />
         <EditText
             android:id="@+id/passwordInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="password*"
+            android:hint="password"
             android:inputType="textPassword"
             android:textColor="#FFFFFF"
             android:textColorHint="#B0B0B0"
             android:backgroundTint="#888888"
             android:padding="12dp"
-            android:layout_marginBottom="28dp"
+            android:layout_marginBottom="36dp"
             android:imeOptions="actionDone" />
 
-        <!-- Terms -->
-        <CheckBox
-            android:id="@+id/termsCheckbox"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="I accept the terms and conditions"
-            android:textColor="#FFFFFF"
-            android:layout_marginBottom="36dp" />
-
-        <!-- Continue -->
         <Button
-            android:id="@+id/continueBtn"
+            android:id="@+id/loginBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Continue"
+            android:text="Log In"
             android:textColor="#000000"
             android:backgroundTint="#FFD600"
             android:padding="12dp"

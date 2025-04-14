@@ -3,14 +3,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="24dp"
-    android:background="#121212">
+    android:background="#121212"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Welcome text -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -31,34 +31,37 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="56dp" />
 
-        <!-- Email Field -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Email"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp" />
-
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Email" android:textColor="#FFFFFF" />
         <EditText
             android:id="@+id/emailInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="email address*"
+            android:hint="email*"
             android:inputType="textEmailAddress"
             android:textColor="#FFFFFF"
             android:textColorHint="#B0B0B0"
             android:backgroundTint="#888888"
             android:padding="12dp"
-            android:layout_marginBottom="28dp" />
+            android:layout_marginBottom="28dp"
+            android:imeOptions="actionNext" />
 
-        <!-- Password Field -->
-        <TextView
-            android:layout_width="wrap_content"
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Username" android:textColor="#FFFFFF" />
+        <EditText
+            android:id="@+id/usernameInput"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Password"
+            android:hint="username*"
             android:textColor="#FFFFFF"
-            android:textSize="14sp" />
+            android:textColorHint="#B0B0B0"
+            android:backgroundTint="#888888"
+            android:padding="12dp"
+            android:layout_marginBottom="28dp"
+            android:imeOptions="actionNext" />
 
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Password" android:textColor="#FFFFFF" />
         <EditText
             android:id="@+id/passwordInput"
             android:layout_width="match_parent"
@@ -69,48 +72,25 @@
             android:textColorHint="#B0B0B0"
             android:backgroundTint="#888888"
             android:padding="12dp"
-            android:layout_marginBottom="28dp" />
+            android:layout_marginBottom="28dp"
+            android:imeOptions="actionDone" />
 
-        <!-- Username Field -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Username"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp" />
-
-        <EditText
-            android:id="@+id/usernameInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="username*"
-            android:inputType="textPersonName"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#B0B0B0"
-            android:backgroundTint="#888888"
-            android:padding="12dp"
-            android:layout_marginBottom="36dp" />
-
-        <!-- Terms checkbox -->
         <CheckBox
             android:id="@+id/termsCheckbox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="I accept the terms and conditions and the privacy policy"
+            android:text="I accept the terms and conditions"
             android:textColor="#FFFFFF"
             android:layout_marginBottom="36dp" />
 
-        <!-- Continue button -->
         <Button
             android:id="@+id/continueBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Continue"
-            android:textAllCaps="true"
             android:textColor="#000000"
             android:backgroundTint="#FFD600"
             android:padding="12dp"
             android:layout_gravity="center" />
     </LinearLayout>
 </ScrollView>
-
