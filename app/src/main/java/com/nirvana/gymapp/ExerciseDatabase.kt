@@ -16,6 +16,14 @@ class ExerciseDatabase(context: Context) : SQLiteOpenHelper(context, "exercises.
             );
         """.trimIndent())
 
+        // New table for user-selected exercises
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS selected_exercises (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                category TEXT NOT NULL
+            );
+        """.trimIndent())
         val exercises = listOf(
             "Ab Wheel Rollout" to "Core",
             "Arnold Press" to "Shoulders",
@@ -109,8 +117,9 @@ class ExerciseDatabase(context: Context) : SQLiteOpenHelper(context, "exercises.
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        db.execSQL("DROP TABLE IF EXISTS exercises")
-        onCreate(db)
+        if (oldVersion < 2) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS selected_exercises (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, category TEXT)")
+        }
     }
 
     fun getAllExercises(): List<Pair<String, String>> {
@@ -122,5 +131,27 @@ class ExerciseDatabase(context: Context) : SQLiteOpenHelper(context, "exercises.
         }
         cursor.close()
         return list
+    }
+
+    fun addSelectedExercise(name: String, category: String) {
+        val db = writableDatabase
+        db.execSQL("CREATE TABLE IF NOT EXISTS selected_exercises (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, category TEXT)")
+        db.execSQL("INSERT INTO selected_exercises (name, category) VALUES (?, ?)", arrayOf(name, category))
+    }
+
+    fun getSelectedExercises(): List<Pair<String, String>> {
+        val db = readableDatabase
+        val cursor: Cursor = db.rawQuery("SELECT name, category FROM selected_exercises", null)
+        val list = mutableListOf<Pair<String, String>>()
+        while (cursor.moveToNext()) {
+            list.add(cursor.getString(0) to cursor.getString(1))
+        }
+        cursor.close()
+        return list
+    }
+
+    fun clearSelectedExercises() {
+        val db = writableDatabase
+        db.execSQL("DELETE FROM selected_exercises")
     }
 }

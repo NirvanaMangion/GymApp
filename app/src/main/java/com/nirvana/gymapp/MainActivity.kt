@@ -31,12 +31,14 @@ class MainActivity : AppCompatActivity() {
             onBackPressed()
         }
 
-        when (intent.getStringExtra("start")) {
-            "email" -> loadFragment(EmailSignupFragment(), "Sign up", true, false)
-            "phone" -> loadFragment(PhoneSignupFragment(), "Sign up", true, false)
-            "unit" -> loadFragment(UnitSelectionFragment(), "Choose Unit", true, false)
-            "login" -> loadFragment(LoginFragment(), "Log In", true, false)
-            else    -> loadFragment(HomeFragment(), "Home", false, true)
+        if (savedInstanceState == null) {
+            when (intent.getStringExtra("start")) {
+                "email" -> loadFragment(EmailSignupFragment(), "Sign up", true, false)
+                "phone" -> loadFragment(PhoneSignupFragment(), "Sign up", true, false)
+                "unit" -> loadFragment(UnitSelectionFragment(), "Choose Unit", true, false)
+                "login" -> loadFragment(LoginFragment(), "Log In", true, false)
+                else -> loadFragment(HomeFragment(), "Home", false, true)
+            }
         }
 
         findViewById<View>(R.id.navHome).setOnClickListener {
@@ -69,8 +71,34 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        if (supportFragmentManager.backStackEntryCount > 1) {
-            supportFragmentManager.popBackStack()
+        val fragmentManager = supportFragmentManager
+
+        if (fragmentManager.backStackEntryCount > 1) {
+            fragmentManager.popBackStack()
+
+            fragmentManager.addOnBackStackChangedListener(object : androidx.fragment.app.FragmentManager.OnBackStackChangedListener {
+                override fun onBackStackChanged() {
+                    val currentFragment = fragmentManager.findFragmentById(R.id.fragment_container)
+                    when (currentFragment) {
+                        is HomeFragment -> {
+                            titleText.text = "Home"
+                            customBack.visibility = View.GONE
+                            bottomNav.visibility = View.VISIBLE
+                        }
+                        is ProfileFragment -> {
+                            titleText.text = "Profile"
+                            customBack.visibility = View.GONE
+                            bottomNav.visibility = View.VISIBLE
+                        }
+                        is SettingsFragment -> {
+                            titleText.text = "Settings"
+                            customBack.visibility = View.GONE
+                            bottomNav.visibility = View.VISIBLE
+                        }
+                    }
+                    fragmentManager.removeOnBackStackChangedListener(this)
+                }
+            })
         } else {
             finish()
         }

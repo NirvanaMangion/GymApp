@@ -13,8 +13,10 @@ class AddExerciseFragment : Fragment() {
 
     private lateinit var exerciseListLayout: LinearLayout
     private lateinit var categorySpinner: Spinner
-    private lateinit var db: ExerciseDatabase
+    private lateinit var addButton: Button
+    private lateinit var userDb: UserDatabase
     private var allExercises: List<Pair<String, String>> = emptyList()
+    private val selectedExercises = mutableSetOf<Pair<String, String>>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -24,12 +26,24 @@ class AddExerciseFragment : Fragment() {
 
         exerciseListLayout = view.findViewById(R.id.exerciseList)
         categorySpinner = view.findViewById(R.id.categorySpinner)
+        addButton = view.findViewById(R.id.addExerciseButton)
+        addButton.visibility = View.GONE
 
-        db = ExerciseDatabase(requireContext())
-        allExercises = db.getAllExercises()
+        userDb = UserDatabase(requireContext())
+        allExercises = ExerciseDatabase(requireContext()).getAllExercises()
 
         setupSpinner()
         displayExercises(allExercises)
+
+        addButton.setOnClickListener {
+            for ((name, category) in selectedExercises) {
+                userDb.addExerciseToRoutine(name, category)
+            }
+            Toast.makeText(requireContext(), "Exercises added!", Toast.LENGTH_SHORT).show()
+            selectedExercises.clear()
+            addButton.visibility = View.GONE
+            (activity as? MainActivity)?.onBackPressed()
+        }
 
         return view
     }
@@ -63,11 +77,7 @@ class AddExerciseFragment : Fragment() {
         categorySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
                 val selected = spinnerItems[position]
-                val filtered = if (selected == "All Categories") {
-                    allExercises
-                } else {
-                    allExercises.filter { it.second == selected }
-                }
+                val filtered = if (selected == "All Categories") allExercises else allExercises.filter { it.second == selected }
                 displayExercises(filtered)
             }
 
@@ -77,47 +87,73 @@ class AddExerciseFragment : Fragment() {
 
     private fun displayExercises(exercises: List<Pair<String, String>>) {
         exerciseListLayout.removeAllViews()
-
         val grouped = exercises.groupBy { it.first[0].uppercaseChar() }
 
         for ((letter, group) in grouped.toSortedMap()) {
-            val sectionHeader = TextView(requireContext()).apply {
+            val header = TextView(requireContext()).apply {
                 text = letter.toString()
-                textSize = 22f
-                setTextColor(Color.parseColor("#FFD600"))  // Yellow
-                setPadding(16, 40, 16, 16) // Bigger top spacing
+                textSize = 26f
+                setTypeface(null, Typeface.BOLD)
+                setTextColor(Color.parseColor("#FFD600"))
+                setPadding(16, 40, 16, 16)
             }
-            exerciseListLayout.addView(sectionHeader)
+            exerciseListLayout.addView(header)
 
             for ((name, category) in group) {
                 val container = LinearLayout(requireContext()).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    setPadding(32, 16, 32, 16)
+                }
+
+                val textContainer = LinearLayout(requireContext()).apply {
                     orientation = LinearLayout.VERTICAL
-                    setPadding(24, 16, 24, 16)
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
                 }
 
                 val nameView = TextView(requireContext()).apply {
                     text = name
                     setTextColor(Color.WHITE)
-                    textSize = 15f
+                    textSize = 16f
                     setTypeface(null, Typeface.BOLD)
                 }
 
                 val categoryView = TextView(requireContext()).apply {
                     text = category
-                    setTextColor(Color.WHITE)  // Now fully visible on dark background
+                    setTextColor(Color.LTGRAY)
                     textSize = 12f
+                }
+
+                val checkmark = TextView(requireContext()).apply {
+                    text = "✓"
+                    setTextColor(Color.parseColor("#FFD600"))
+                    textSize = 20f
+                    visibility = if ((name to category) in selectedExercises) View.VISIBLE else View.GONE
+                }
+
+                textContainer.addView(nameView)
+                textContainer.addView(categoryView)
+                container.addView(textContainer)
+                container.addView(checkmark)
+
+                container.setOnClickListener {
+                    val pair = name to category
+                    if (selectedExercises.contains(pair)) {
+                        selectedExercises.remove(pair)
+                        checkmark.visibility = View.GONE
+                    } else {
+                        selectedExercises.add(pair)
+                        checkmark.visibility = View.VISIBLE
+                    }
+                    addButton.visibility = if (selectedExercises.isNotEmpty()) View.VISIBLE else View.GONE
                 }
 
                 val divider = View(requireContext()).apply {
                     layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        1
+                        LinearLayout.LayoutParams.MATCH_PARENT, 1
                     ).apply { topMargin = 8 }
                     setBackgroundColor(Color.DKGRAY)
                 }
 
-                container.addView(nameView)
-                container.addView(categoryView)
                 exerciseListLayout.addView(container)
                 exerciseListLayout.addView(divider)
             }

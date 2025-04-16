@@ -1,27 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212"
-    android:orientation="vertical"
-    android:padding="8dp">
+    android:background="#121212">
 
-    <Spinner
-        android:id="@+id/categorySpinner"
+    <!-- Content Layout -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:popupBackground="#222222"
-        android:backgroundTint="#FFFFFF"
-        android:layout_marginBottom="12dp" />
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingTop="120dp"
+        android:padding="16dp">
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <LinearLayout
-            android:id="@+id/exerciseList"
+        <!-- Spinner -->
+        <Spinner
+            android:id="@+id/categorySpinner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" />
-    </ScrollView>
-</LinearLayout>
+            android:layout_marginBottom="12dp"
+            android:spinnerMode="dropdown"
+            android:popupBackground="#FFFFFF"
+            android:backgroundTint="#FFD600"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark"
+            android:dropDownVerticalOffset="10dp"
+            android:dropDownHorizontalOffset="0dp"
+            android:dropDownWidth="match_parent" />
+
+        <!-- Scrollable Exercise List -->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:id="@+id/exerciseList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </ScrollView>
+    </LinearLayout>
+
+    <!-- Floating Add Button (appears only when selection happens) -->
+    <Button
+        android:id="@+id/addExerciseButton"
+        android:layout_width="100dp"
+        android:layout_height="40dp"
+        android:text="Add"
+        android:textAllCaps="false"
+        android:textSize="14sp"
+        android:backgroundTint="#FFD600"
+        android:textColor="@android:color/black"
+        android:layout_gravity="top|end"
+        android:layout_margin="16dp"
+        android:visibility="gone" />
+</FrameLayout>
