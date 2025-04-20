@@ -1,4 +1,4 @@
-package com.nirvana.gymapp
+package com.nirvana.gymapp.fragments
 
 import android.os.Bundle
 import android.text.SpannableString
@@ -10,6 +10,9 @@ import android.widget.*
 import android.content.Context
 import androidx.core.graphics.toColorInt
 import androidx.fragment.app.Fragment
+import com.nirvana.gymapp.R
+import com.nirvana.gymapp.database.UserDatabase
+import com.nirvana.gymapp.activities.MainActivity
 
 class EmailSignupFragment : Fragment() {
 
@@ -58,16 +61,14 @@ class EmailSignupFragment : Fragment() {
                 else -> {
                     userDb.addUser(username, email, null, password)
                     toast("Account created!")
+                    val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
+                    sharedPref.edit().putString("loggedInUser", username).apply()
+
                     val fragment = UnitSelectionFragment()
                     fragment.arguments = Bundle().apply {
-                        putString("username", username)  // ✅ pass the signed-up username
+                        putString("username", username)
                     }
-                    (activity as MainActivity).loadFragment(
-                        fragment,
-                        title = "Choose Unit",
-                        showUpArrow = true,
-                        showBottomNav = false
-                    )
+
                 }
             }
         }

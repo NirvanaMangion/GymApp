@@ -1,4 +1,4 @@
-package com.nirvana.gymapp
+package com.nirvana.gymapp.activities
 
 import android.os.Bundle
 import android.view.View
@@ -7,6 +7,14 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
+import com.nirvana.gymapp.fragments.EmailSignupFragment
+import com.nirvana.gymapp.fragments.HomeFragment
+import com.nirvana.gymapp.fragments.LoginFragment
+import com.nirvana.gymapp.fragments.PhoneSignupFragment
+import com.nirvana.gymapp.fragments.ProfileFragment
+import com.nirvana.gymapp.R
+import com.nirvana.gymapp.fragments.SettingsFragment
+import com.nirvana.gymapp.fragments.UnitSelectionFragment
 
 class MainActivity : AppCompatActivity() {
 

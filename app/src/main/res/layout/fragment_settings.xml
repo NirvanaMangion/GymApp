@@ -10,98 +10,88 @@
         android:orientation="vertical"
         android:padding="24dp">
 
-        <!-- Section: Account -->
+        <!-- Title -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Account"
+            android:text="Settings"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="32dp" />
+
+        <!-- 🔐 Account Settings -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Account Settings"
             android:textColor="#888888"
             android:textSize="14sp"
-            android:layout_marginBottom="8dp" />
-
-        <Button
-        android:id="@+id/saveRoutineButton"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_alignParentEnd="true"
-        android:layout_margin="16dp"
-        android:background="@drawable/save_button_background"
-        android:text="Save"
-        android:textColor="@android:color/black"
-        android:textSize="14sp"
-        android:layout_alignParentTop="true" />
-
+            android:layout_marginBottom="12dp" />
 
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Change Password"
+            android:backgroundTint="#2C2C2C"
+            android:textColor="@android:color/white"
             android:textAllCaps="false"
-            android:backgroundTint="#1E1E1E"
-            android:textColor="#FFFFFF"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="12dp" />
 
-        <!-- Section: App -->
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Edit Profile"
+            android:backgroundTint="#2C2C2C"
+            android:textColor="@android:color/white"
+            android:textAllCaps="false"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Log Out"
+            android:backgroundTint="#FFD600"
+            android:textColor="#000000"
+            android:textAllCaps="false"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Delete Account"
+            android:backgroundTint="#C62828"
+            android:textColor="#FFFFFF"
+            android:textAllCaps="false"
+            android:layout_marginBottom="32dp" />
+
+        <!-- 🎛 App Settings -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="App Settings"
             android:textColor="#888888"
             android:textSize="14sp"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="12dp" />
 
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Theme"
+            android:text="Theme (Light / Dark)"
+            android:backgroundTint="#2C2C2C"
+            android:textColor="@android:color/white"
             android:textAllCaps="false"
-            android:backgroundTint="#1E1E1E"
-            android:textColor="#FFFFFF"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="12dp" />
 
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Notifications"
+            android:text="Change Units"
+            android:backgroundTint="#2C2C2C"
+            android:textColor="@android:color/white"
             android:textAllCaps="false"
-            android:backgroundTint="#1E1E1E"
-            android:textColor="#FFFFFF"
-            android:layout_marginBottom="24dp" />
-
-        <!-- Section: Support -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Support and Info"
-            android:textColor="#888888"
-            android:textSize="14sp"
-            android:layout_marginBottom="8dp" />
-
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="About"
-            android:textAllCaps="false"
-            android:backgroundTint="#1E1E1E"
-            android:textColor="#FFFFFF"
-            android:layout_marginBottom="8dp" />
-
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Contact Support"
-            android:textAllCaps="false"
-            android:backgroundTint="#1E1E1E"
-            android:textColor="#FFFFFF"
             android:layout_marginBottom="32dp" />
 
-        <!-- Logout -->
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Log Out"
-            android:textAllCaps="false"
-            android:backgroundTint="#FFD600"
-            android:textColor="#FFFFFF" />
     </LinearLayout>
 </ScrollView>

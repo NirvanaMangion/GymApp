@@ -1,4 +1,4 @@
-package com.nirvana.gymapp
+package com.nirvana.gymapp.activities
 
 import android.content.Intent
 import android.graphics.Color
@@ -10,6 +10,7 @@ import android.text.style.ForegroundColorSpan
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.nirvana.gymapp.R
 
 class FrontpageActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

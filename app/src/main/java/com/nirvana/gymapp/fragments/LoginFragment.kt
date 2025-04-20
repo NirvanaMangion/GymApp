@@ -1,4 +1,4 @@
-package com.nirvana.gymapp
+package com.nirvana.gymapp.fragments
 
 import android.os.Bundle
 import android.text.Spannable
@@ -10,6 +10,9 @@ import android.widget.*
 import android.content.Context
 import androidx.core.graphics.toColorInt
 import androidx.fragment.app.Fragment
+import com.nirvana.gymapp.R
+import com.nirvana.gymapp.database.UserDatabase
+import com.nirvana.gymapp.activities.MainActivity
 
 class LoginFragment : Fragment() {
 
@@ -46,12 +49,16 @@ class LoginFragment : Fragment() {
                 }
                 userDb.validateCredentials(username, password) -> {
                     toast("Login successful!")
+                    val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
+                    sharedPref.edit().putString("loggedInUser", username).apply()
+
                     (activity as MainActivity).loadFragment(
                         HomeFragment(),
                         title = "Home",
                         showUpArrow = false,
                         showBottomNav = true
                     )
+
                 }
                 else -> {
                     toast("Invalid username or password.")

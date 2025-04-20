@@ -1,4 +1,4 @@
-package com.nirvana.gymapp
+package com.nirvana.gymapp.fragments
 
 import android.content.Context
 import android.graphics.Color
@@ -7,11 +7,14 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.fragment.app.Fragment
+import com.nirvana.gymapp.R
+import com.nirvana.gymapp.database.UserDatabase
 
 class RoutineDetailFragment : Fragment() {
 
@@ -38,6 +41,8 @@ class RoutineDetailFragment : Fragment() {
 
     private var secondsElapsed = 0
     private var isPaused = false
+    private var routineStartTime: Long = 0L
+
     private val handler = Handler(Looper.getMainLooper())
     private val timerRunnable = object : Runnable {
         override fun run() {
@@ -55,16 +60,13 @@ class RoutineDetailFragment : Fragment() {
         routineName = arguments?.getString(ARG_ROUTINE_NAME)
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val view = inflater.inflate(R.layout.fragment_routine_detail, container, false)
         containerLayout = view.findViewById(R.id.exerciseLogContainer)
         timerTextView = view.findViewById(R.id.timerDisplay)
         topButton = view.findViewById(R.id.startRoutineBtn)
         completeButton = view.findViewById(R.id.completeRoutineBtn)
 
-        // Hide keyboard when tapping outside input
         view.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
                 val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -75,6 +77,9 @@ class RoutineDetailFragment : Fragment() {
 
         topButton.setOnClickListener {
             if (topButton.text == "Start Routine") {
+                routineStartTime = System.currentTimeMillis()
+                Log.d("RoutineDebug", "Routine started at: $routineStartTime")
+
                 handler.post(timerRunnable)
                 topButton.text = "Pause Routine"
                 topButton.setBackgroundColor(Color.parseColor("#FFD600"))
@@ -92,8 +97,20 @@ class RoutineDetailFragment : Fragment() {
 
         completeButton.setOnClickListener {
             handler.removeCallbacks(timerRunnable)
+
+            val routineEndTime = System.currentTimeMillis()
+            val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
+            val userId = sharedPref.getString("loggedInUser", "guest") ?: "guest"
+            Log.d("RoutineDebug", "Routine completed at: $routineEndTime")
+
+            val db = UserDatabase(requireContext())
+            db.insertCompletedRoutineV2(userId, routineName ?: "Unnamed", routineStartTime, routineEndTime)
+
             Toast.makeText(requireContext(), "Routine Completed!", Toast.LENGTH_SHORT).show()
-            requireActivity().onBackPressed()
+
+            requireActivity().supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, ProfileFragment())
+                .commit()
         }
 
         val exercises = UserDatabase(requireContext()).getExercisesForRoutine(routineId)
@@ -117,7 +134,6 @@ class RoutineDetailFragment : Fragment() {
 
     private fun createExerciseLog(name: String, category: String): View {
         val context = requireContext()
-
         val container = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(0, 48, 0, 96)

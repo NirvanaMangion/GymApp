@@ -1,4 +1,4 @@
-package com.nirvana.gymapp
+package com.nirvana.gymapp.database
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase

@@ -1,4 +1,4 @@
-package com.nirvana.gymapp
+package com.nirvana.gymapp.fragments
 
 import android.graphics.Color
 import android.os.Bundle
@@ -8,6 +8,9 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
+import com.nirvana.gymapp.R
+import com.nirvana.gymapp.database.UserDatabase
+import com.nirvana.gymapp.activities.MainActivity
 
 class AddRoutineFragment : Fragment() {
 

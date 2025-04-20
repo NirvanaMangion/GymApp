@@ -1,12 +1,14 @@
-package com.nirvana.gymapp
+package com.nirvana.gymapp.database
 
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import android.database.Cursor
+import android.util.Log
+import java.text.SimpleDateFormat
+import java.util.*
 
-class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", null, 4) {
+class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", null, 5) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("""
@@ -50,6 +52,16 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
                 FOREIGN KEY (routine_id) REFERENCES saved_routines(id)
             );
         """.trimIndent())
+
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS completed_routines_v2 (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT NOT NULL,
+                routine_name TEXT,
+                start_time INTEGER,
+                end_time INTEGER
+            );
+        """.trimIndent())
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -85,6 +97,17 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
                     name TEXT,
                     category TEXT,
                     FOREIGN KEY (routine_id) REFERENCES saved_routines(id)
+                );
+            """.trimIndent())
+        }
+        if (oldVersion < 5) {
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS completed_routines_v2 (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id TEXT NOT NULL,
+                    routine_name TEXT,
+                    start_time INTEGER,
+                    end_time INTEGER
                 );
             """.trimIndent())
         }
@@ -201,5 +224,61 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         }
         cursor.close()
         return list
+    }
+
+    // ✅ Save completed routine to v2 table
+    fun insertCompletedRoutineV2(userId: String, routineName: String, startTime: Long, endTime: Long) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("user_id", userId)
+            put("routine_name", routineName)
+            put("start_time", startTime)
+            put("end_time", endTime)
+        }
+        val result = db.insert("completed_routines_v2", null, values)
+        Log.d("DB_INSERT", "insertCompletedRoutineV2: start=$startTime, end=$endTime, rowId=$result")
+    }
+
+    // ✅ Get durations from completed_routines_v2
+    fun getV2Durations(userId: String): Map<String, Int> {
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT start_time, end_time FROM completed_routines_v2 WHERE user_id = ?",
+            arrayOf(userId)
+        )
+        val result = mutableMapOf<String, Int>()
+        while (cursor.moveToNext()) {
+            val start = cursor.getLong(0)
+            val end = cursor.getLong(1)
+            val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(start))
+            val duration = ((end - start) / 1000 / 60).toInt()
+            val current = if (result.containsKey(date)) result[date]!! else 0
+            result[date] = current + duration
+        }
+        cursor.close()
+        Log.d("ChartData", "V2 durations: $result")
+        return result
+    }
+
+    // ✅ Simulated volume based on duration
+    fun getDailyVolumes(userId: String): Map<String, Int> {
+        val rawDurations = getV2Durations(userId)
+        val result = mutableMapOf<String, Int>()
+        for ((date, duration) in rawDurations) {
+            result[date] = duration * 50 // e.g., 50kg/min
+        }
+        Log.d("ChartData", "V2 volumes: $result")
+        return result
+    }
+
+    // ✅ Simulated reps based on duration
+    fun getDailyReps(userId: String): Map<String, Int> {
+        val rawDurations = getV2Durations(userId)
+        val result = mutableMapOf<String, Int>()
+        for ((date, duration) in rawDurations) {
+            result[date] = duration * 2 // e.g., 2 reps/min
+        }
+        Log.d("ChartData", "V2 reps: $result")
+        return result
     }
 }
