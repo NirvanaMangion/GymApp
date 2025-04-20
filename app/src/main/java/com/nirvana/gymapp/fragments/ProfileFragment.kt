@@ -4,9 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.Fragment
@@ -18,6 +16,7 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.nirvana.gymapp.R
 import com.nirvana.gymapp.database.UserDatabase
+import com.nirvana.gymapp.activities.MainActivity
 
 class ProfileFragment : Fragment() {
 
@@ -34,26 +33,44 @@ class ProfileFragment : Fragment() {
 
         db = UserDatabase(requireContext())
 
-        // ✅ Load logged-in username from SharedPreferences
         val usernameText = view.findViewById<TextView>(R.id.usernameTextView)
         val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
         val loggedInUser = sharedPref.getString("loggedInUser", "Username") ?: "Username"
-        userId = loggedInUser // Also used for chart query
+        userId = loggedInUser
         usernameText.text = loggedInUser
 
         val btnDuration = view.findViewById<Button>(R.id.btnDuration)
         val btnVolume = view.findViewById<Button>(R.id.btnVolume)
         val btnReps = view.findViewById<Button>(R.id.btnReps)
+        val btnWorkoutHistory = view.findViewById<Button>(R.id.btnWorkoutHistory)
+        val btnMeasures = view.findViewById<Button>(R.id.btnMeasures)
 
         chart = view.findViewById(R.id.lineChart)
         noDataText = view.findViewById(R.id.tvNoData)
+
+        btnWorkoutHistory.setOnClickListener {
+            (activity as? MainActivity)?.loadFragment(
+                WorkoutHistoryFragment(),
+                title = "Workout History",
+                showUpArrow = true,
+                showBottomNav = false
+            )
+        }
+
+        btnMeasures.setOnClickListener {
+            (activity as? MainActivity)?.loadFragment(
+                MeasureFragment(),
+                title = "Body Measures",
+                showUpArrow = true,
+                showBottomNav = false
+            )
+        }
 
         val selectedColor = "#FFD600"
         val defaultColor = "#333333"
 
         fun highlightSelected(selected: Button) {
-            val allButtons = listOf(btnDuration, btnVolume, btnReps)
-            allButtons.forEach { button ->
+            listOf(btnDuration, btnVolume, btnReps).forEach { button ->
                 if (button == selected) {
                     button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor(selectedColor)))
                     button.setTextColor(Color.BLACK)
@@ -96,7 +113,7 @@ class ProfileFragment : Fragment() {
 
                 for ((date, value) in sorted) {
                     entries.add(Entry(index, value.toFloat()))
-                    labels.add(date.substring(5)) // MM-DD
+                    labels.add(date.substring(5))
                     index += 1f
                 }
 

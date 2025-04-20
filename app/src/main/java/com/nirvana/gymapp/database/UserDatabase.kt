@@ -281,4 +281,51 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         Log.d("ChartData", "V2 reps: $result")
         return result
     }
+
+    data class RoutineLog(
+        val routineName: String,
+        val startTime: Long,
+        val duration: Int,
+        val volume: Int,
+        val reps: Int
+    )
+
+    fun getAllCompletedRoutines(userId: String): List<RoutineLog> {
+        val db = readableDatabase
+        val result = mutableListOf<RoutineLog>()
+
+        val cursor = db.rawQuery(
+            "SELECT routine_name, start_time, end_time FROM completed_routines_v2 WHERE user_id = ? ORDER BY start_time DESC",
+            arrayOf(userId)
+        )
+
+        while (cursor.moveToNext()) {
+            val name = cursor.getString(0)
+            val start = cursor.getLong(1)
+            val end = cursor.getLong(2)
+            val duration = ((end - start) / 1000 / 60).toInt()
+            val volume = duration * 50 // Example logic
+            val reps = duration * 2
+            result.add(RoutineLog(name, start, duration, volume, reps))
+        }
+        cursor.close()
+        return result
+    }
+    fun getWorkoutHistoryLogs(userId: String): List<Triple<String, Long, Long>> {
+        val db = readableDatabase
+        val result = mutableListOf<Triple<String, Long, Long>>()
+        val cursor = db.rawQuery(
+            "SELECT routine_name, start_time, end_time FROM completed_routines_v2 WHERE user_id = ? ORDER BY start_time DESC",
+            arrayOf(userId)
+        )
+        while (cursor.moveToNext()) {
+            val name = cursor.getString(0)
+            val start = cursor.getLong(1)
+            val end = cursor.getLong(2)
+            result.add(Triple(name, start, end))
+        }
+        cursor.close()
+        return result
+    }
+
 }

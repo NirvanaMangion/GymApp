@@ -120,22 +120,26 @@
             android:orientation="vertical">
 
             <Button
+                android:id="@+id/btnWorkoutHistory"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Workout History"
-                android:textAllCaps="false"
                 android:backgroundTint="#4D4D4D"
                 android:textColor="@android:color/white"
-                android:layout_marginBottom="12dp" />
+                android:textAllCaps="false"
+                android:layout_marginTop="12dp" />
 
             <Button
+                android:id="@+id/btnMeasures"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Measures"
-                android:textAllCaps="false"
                 android:backgroundTint="#4D4D4D"
                 android:textColor="@android:color/white"
-                android:layout_marginBottom="12dp" />
+                android:textAllCaps="false"
+                android:layout_marginTop="12dp" />
+
+
         </LinearLayout>
     </LinearLayout>
 </ScrollView>
