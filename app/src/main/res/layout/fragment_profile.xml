@@ -17,15 +17,21 @@
             android:layout_height="100dp"
             android:layout_marginBottom="8dp"
             android:background="@drawable/circle_background"
-            android:layout_gravity="center">
+            android:layout_gravity="center"
+            android:gravity="center">
 
             <ImageView
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:src="@drawable/personicon"
-                android:layout_gravity="center"
-                android:contentDescription="Profile Icon" />
+                android:id="@+id/profileImageView"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:scaleType="centerInside"
+            android:cropToPadding="true"
+            android:clipToOutline="true"
+            android:src="@drawable/personicon"
+            android:contentDescription="Profile Icon" />
         </FrameLayout>
+
+
 
         <!-- Username -->
         <TextView

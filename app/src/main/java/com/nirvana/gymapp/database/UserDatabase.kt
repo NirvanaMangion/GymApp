@@ -8,21 +8,23 @@ import android.util.Log
 import java.text.SimpleDateFormat
 import java.util.*
 
-class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", null, 5) {
+class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", null, 6) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("""
-            CREATE TABLE users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT NOT NULL UNIQUE,
-                email TEXT,
-                phone TEXT,
-                password TEXT NOT NULL,
-                weightUnit TEXT,
-                distanceUnit TEXT,
-                measurementUnit TEXT
-            );
-        """.trimIndent())
+    CREATE TABLE users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL UNIQUE,
+        email TEXT,
+        phone TEXT,
+        password TEXT NOT NULL,
+        weightUnit TEXT,
+        distanceUnit TEXT,
+        measurementUnit TEXT,
+        profileImageUri TEXT
+    );
+""".trimIndent())
+
 
         db.execSQL("""
             CREATE TABLE routine_exercises (
@@ -62,6 +64,19 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
                 end_time INTEGER
             );
         """.trimIndent())
+
+        db.execSQL("""
+    CREATE TABLE IF NOT EXISTS measurements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
+        weight TEXT,
+        chest TEXT,
+        waist TEXT,
+        arms TEXT,
+        timestamp TEXT
+    );
+""".trimIndent())
+
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -72,44 +87,47 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         }
         if (oldVersion < 3) {
             db.execSQL("""
-                CREATE TABLE IF NOT EXISTS routine_exercises (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL,
-                    category TEXT,
-                    sets INTEGER DEFAULT 1,
-                    reps INTEGER DEFAULT 0,
-                    weight REAL DEFAULT 0
-                );
-            """.trimIndent())
+            CREATE TABLE IF NOT EXISTS routine_exercises (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                category TEXT,
+                sets INTEGER DEFAULT 1,
+                reps INTEGER DEFAULT 0,
+                weight REAL DEFAULT 0
+            );
+        """.trimIndent())
         }
         if (oldVersion < 4) {
             db.execSQL("""
-                CREATE TABLE IF NOT EXISTS saved_routines (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-            """.trimIndent())
+            CREATE TABLE IF NOT EXISTS saved_routines (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """.trimIndent())
             db.execSQL("""
-                CREATE TABLE IF NOT EXISTS routine_exercise_items (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    routine_id INTEGER,
-                    name TEXT,
-                    category TEXT,
-                    FOREIGN KEY (routine_id) REFERENCES saved_routines(id)
-                );
-            """.trimIndent())
+            CREATE TABLE IF NOT EXISTS routine_exercise_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                routine_id INTEGER,
+                name TEXT,
+                category TEXT,
+                FOREIGN KEY (routine_id) REFERENCES saved_routines(id)
+            );
+        """.trimIndent())
         }
         if (oldVersion < 5) {
             db.execSQL("""
-                CREATE TABLE IF NOT EXISTS completed_routines_v2 (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id TEXT NOT NULL,
-                    routine_name TEXT,
-                    start_time INTEGER,
-                    end_time INTEGER
-                );
-            """.trimIndent())
+            CREATE TABLE IF NOT EXISTS completed_routines_v2 (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT NOT NULL,
+                routine_name TEXT,
+                start_time INTEGER,
+                end_time INTEGER
+            );
+        """.trimIndent())
+        }
+        if (oldVersion < 6) {
+            db.execSQL("ALTER TABLE users ADD COLUMN profileImageUri TEXT")
         }
     }
 
@@ -327,5 +345,44 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         cursor.close()
         return result
     }
+    fun updateProfileImage(username: String, imageUri: String): Boolean {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("profileImageUri", imageUri)
+        }
+        return db.update("users", values, "username = ?", arrayOf(username)) > 0
+    }
 
+    fun getProfileImage(username: String): String? {
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT profileImageUri FROM users WHERE username = ?",
+            arrayOf(username)
+        )
+        var result: String? = null
+        if (cursor.moveToFirst()) {
+            result = cursor.getString(0)
+        }
+        cursor.close()
+        return result
+    }
+    fun insertMeasurement(
+        username: String,
+        weight: String,
+        chest: String,
+        waist: String,
+        arms: String,
+        timestamp: String
+    ): Boolean {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("username", username)
+            put("weight", weight)
+            put("chest", chest)
+            put("waist", waist)
+            put("arms", arms)
+            put("timestamp", timestamp)
+        }
+        return db.insert("measurements", null, values) != -1L
+    }
 }

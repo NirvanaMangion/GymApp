@@ -11,13 +11,13 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Switch Section -->
+        <!-- Switch Tabs -->
         <LinearLayout
             android:id="@+id/switchTabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#2A2A2A"
             android:orientation="vertical"
+            android:background="#2A2A2A"
             android:padding="8dp"
             android:layout_marginBottom="16dp">
 
@@ -41,7 +41,7 @@
                 android:textColor="#AAAAAA" />
         </LinearLayout>
 
-        <!-- Personal Info Section -->
+        <!-- Personal Info Layout -->
         <LinearLayout
             android:id="@+id/personalLayout"
             android:layout_width="match_parent"
@@ -60,6 +60,28 @@
                 android:textStyle="bold"
                 android:layout_marginBottom="16dp" />
 
+            <!-- Profile Picture Placeholder -->
+            <ImageView
+                android:id="@+id/profileImage"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_gravity="center"
+                android:src="@drawable/personicon"
+                android:tint="#AAAAAA"
+                android:layout_marginBottom="12dp" />
+
+            <Button
+                android:id="@+id/btnChangePicture"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Change Picture"
+                android:textAllCaps="false"
+                android:backgroundTint="#FFD600"
+                android:textColor="#000000"
+                android:layout_gravity="center"
+                android:layout_marginBottom="24dp" />
+
+            <!-- Fields -->
             <EditText
                 android:id="@+id/firstName"
                 android:layout_width="match_parent"
@@ -84,14 +106,46 @@
                 android:id="@+id/email"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Email"
+                android:hint="Email or Phone"
                 android:textColor="#FFFFFF"
                 android:textColorHint="#AAAAAA"
                 android:backgroundTint="#555555"
                 android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Theme"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp" />
+
+            <RadioGroup
+                android:id="@+id/themeGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="24dp">
+
+                <RadioButton
+                    android:id="@+id/btnLightMode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Light"
+                    android:textColor="#FFFFFF" />
+
+                <RadioButton
+                    android:id="@+id/btnDarkMode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Dark"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginStart="16dp" />
+            </RadioGroup>
         </LinearLayout>
 
-        <!-- Password Layout -->
+        <!-- Email & Password Layout -->
         <LinearLayout
             android:id="@+id/passwordLayout"
             android:layout_width="match_parent"
@@ -155,9 +209,9 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Password Requirements:\n• Must be at least 10 characters long\n• Must contain small and capital letters\n• Must contain at least 1 number\n• Must contain at least 1 special character"
+                android:text="Password Requirements:\n• At least 10 characters\n• Include uppercase and lowercase\n• Include a number\n• Include a special character"
                 android:textColor="#AAAAAA"
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:layout_marginBottom="24dp" />
 
             <TextView
@@ -201,7 +255,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Do you want to delete your account and all data associated to it?"
+                android:text="Do you want to delete your account and all data associated with it?"
                 android:textColor="#FFFFFF"
                 android:layout_marginBottom="12dp" />
 
@@ -210,8 +264,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Delete Account"
-                android:textColor="#000000"
-                android:backgroundTint="#FFD600" />
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#D32F2F" />
         </LinearLayout>
+
     </LinearLayout>
 </ScrollView>

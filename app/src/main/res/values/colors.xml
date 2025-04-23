@@ -5,4 +5,6 @@
     <color name="grey_700">#444444</color>
     <color name="grey_900">#2A2A2A</color>
     <color name="grey_400">#AAAAAA</color>
+    <color name="yellow">#FFD600</color>
+    <color name="dark_gray">#333333</color>
 </resources>

@@ -1,19 +1,18 @@
 package com.nirvana.gymapp.fragments
 
+import android.app.AlertDialog
 import android.content.Context
-import android.graphics.Color
+import android.content.Intent
+import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.view.*
-import android.widget.Button
-import android.widget.TextView
+import android.widget.*
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
-import com.github.mikephil.charting.charts.LineChart
-import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.data.Entry
-import com.github.mikephil.charting.data.LineData
-import com.github.mikephil.charting.data.LineDataSet
-import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.nirvana.gymapp.R
 import com.nirvana.gymapp.database.UserDatabase
 import com.nirvana.gymapp.activities.MainActivity
@@ -22,23 +21,67 @@ class ProfileFragment : Fragment() {
 
     private lateinit var db: UserDatabase
     private lateinit var userId: String
-    private lateinit var chart: LineChart
+    private lateinit var profileImageView: ImageView
+    private lateinit var usernameTextView: TextView
+    private lateinit var chart: com.github.mikephil.charting.charts.LineChart
     private lateinit var noDataText: TextView
 
+    private lateinit var galleryLauncher: ActivityResultLauncher<Intent>
+    private lateinit var cameraLauncher: ActivityResultLauncher<Void?>
+    private var imageUri: Uri? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        // Gallery launcher
+        galleryLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == android.app.Activity.RESULT_OK && result.data?.data != null) {
+                imageUri = result.data?.data
+                profileImageView.setImageURI(imageUri)
+                db.updateProfileImage(userId, imageUri.toString()) // Save to DB
+            }
+        }
+
+        // Camera launcher
+        cameraLauncher = registerForActivityResult(
+            ActivityResultContracts.TakePicturePreview()
+        ) { bitmap: Bitmap? ->
+            bitmap?.let {
+                profileImageView.setImageBitmap(it)
+                // Note: Not saved to DB since it's just a Bitmap. You could encode/save it to internal storage if needed.
+            }
+        }
+    }
+
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_profile, container, false)
-
         db = UserDatabase(requireContext())
 
-        val usernameText = view.findViewById<TextView>(R.id.usernameTextView)
+        // Get logged-in username from SharedPreferences
         val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
-        val loggedInUser = sharedPref.getString("loggedInUser", "Username") ?: "Username"
-        userId = loggedInUser
-        usernameText.text = loggedInUser
+        userId = sharedPref.getString("loggedInUser", "Username") ?: "Username"
 
+        profileImageView = view.findViewById(R.id.profileImageView)
+        usernameTextView = view.findViewById(R.id.usernameTextView)
+        usernameTextView.text = userId
+
+        // Load saved image URI from DB
+        val savedUri = db.getProfileImage(userId)
+        if (!savedUri.isNullOrEmpty()) {
+            profileImageView.setImageURI(Uri.parse(savedUri))
+        } else {
+            profileImageView.setImageResource(R.drawable.personicon) // Default icon
+        }
+
+        profileImageView.setOnClickListener {
+            showImageSourceDialog()
+        }
+
+        // Chart UI setup
         val btnDuration = view.findViewById<Button>(R.id.btnDuration)
         val btnVolume = view.findViewById<Button>(R.id.btnVolume)
         val btnReps = view.findViewById<Button>(R.id.btnReps)
@@ -72,18 +115,18 @@ class ProfileFragment : Fragment() {
         fun highlightSelected(selected: Button) {
             listOf(btnDuration, btnVolume, btnReps).forEach { button ->
                 if (button == selected) {
-                    button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor(selectedColor)))
-                    button.setTextColor(Color.BLACK)
+                    button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor(selectedColor)))
+                    button.setTextColor(android.graphics.Color.BLACK)
                 } else {
-                    button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor(defaultColor)))
-                    button.setTextColor(Color.WHITE)
+                    button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor(defaultColor)))
+                    button.setTextColor(android.graphics.Color.WHITE)
                 }
             }
         }
 
         fun loadAndShowLineChart(type: String) {
             try {
-                val entries = mutableListOf<Entry>()
+                val entries = mutableListOf<com.github.mikephil.charting.data.Entry>()
                 val labels = mutableListOf<String>()
 
                 val rawData = when (type) {
@@ -104,24 +147,23 @@ class ProfileFragment : Fragment() {
 
                 val sorted = rawData.toSortedMap()
                 var index = 0f
-
                 if (sorted.size == 1) {
-                    entries.add(Entry(index, 0f))
+                    entries.add(com.github.mikephil.charting.data.Entry(index, 0f))
                     labels.add("Start")
                     index += 1f
                 }
 
                 for ((date, value) in sorted) {
-                    entries.add(Entry(index, value.toFloat()))
+                    entries.add(com.github.mikephil.charting.data.Entry(index, value.toFloat()))
                     labels.add(date.substring(5))
                     index += 1f
                 }
 
-                val dataSet = LineDataSet(entries, type.replaceFirstChar { it.uppercaseChar() }).apply {
-                    color = Color.parseColor("#FFD600")
-                    fillColor = Color.parseColor("#FFD600")
-                    setCircleColor(Color.WHITE)
-                    valueTextColor = Color.WHITE
+                val dataSet = com.github.mikephil.charting.data.LineDataSet(entries, type.replaceFirstChar { it.uppercaseChar() }).apply {
+                    color = android.graphics.Color.parseColor("#FFD600")
+                    fillColor = android.graphics.Color.parseColor("#FFD600")
+                    setCircleColor(android.graphics.Color.WHITE)
+                    valueTextColor = android.graphics.Color.WHITE
                     lineWidth = 2f
                     setDrawValues(true)
                     setDrawCircles(true)
@@ -130,15 +172,15 @@ class ProfileFragment : Fragment() {
                 }
 
                 chart.apply {
-                    data = LineData(dataSet)
-                    xAxis.valueFormatter = IndexAxisValueFormatter(labels)
+                    data = com.github.mikephil.charting.data.LineData(dataSet)
+                    xAxis.valueFormatter = com.github.mikephil.charting.formatter.IndexAxisValueFormatter(labels)
                     xAxis.granularity = 1f
                     xAxis.isGranularityEnabled = true
-                    xAxis.position = XAxis.XAxisPosition.BOTTOM
-                    xAxis.textColor = Color.WHITE
-                    axisLeft.textColor = Color.WHITE
+                    xAxis.position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
+                    xAxis.textColor = android.graphics.Color.WHITE
+                    axisLeft.textColor = android.graphics.Color.WHITE
                     axisRight.isEnabled = false
-                    legend.textColor = Color.WHITE
+                    legend.textColor = android.graphics.Color.WHITE
                     description.isEnabled = false
                     invalidate()
                 }
@@ -169,5 +211,24 @@ class ProfileFragment : Fragment() {
         loadAndShowLineChart("duration")
 
         return view
+    }
+
+    private fun showImageSourceDialog() {
+        val options = arrayOf("Choose from gallery", "Take a photo")
+        AlertDialog.Builder(requireContext())
+            .setTitle("Select profile image")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> {
+                        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                        intent.type = "image/*"
+                        galleryLauncher.launch(intent)
+                    }
+                    1 -> {
+                        cameraLauncher.launch(null)
+                    }
+                }
+            }
+            .show()
     }
 }

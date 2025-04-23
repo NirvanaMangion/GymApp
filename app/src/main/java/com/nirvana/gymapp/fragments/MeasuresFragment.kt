@@ -1,23 +1,41 @@
 package com.nirvana.gymapp.fragments
 
+import android.app.AlertDialog
 import android.content.Context
+import android.content.Intent
+import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
+import android.util.Log
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import com.nirvana.gymapp.R
+import com.nirvana.gymapp.database.UserDatabase
 import java.text.SimpleDateFormat
 import java.util.*
 
 class MeasureFragment : Fragment() {
 
     private lateinit var historyContainer: LinearLayout
+    private lateinit var db: UserDatabase
+    private lateinit var userId: String
+    private lateinit var galleryLauncher: ActivityResultLauncher<Intent>
+    private lateinit var cameraLauncher: ActivityResultLauncher<Void?>
+    private val progressPhotos = mutableListOf<Bitmap>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         val view = inflater.inflate(R.layout.fragment_measures, container, false)
+
+        db = UserDatabase(requireContext())
+        val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
+        userId = sharedPref.getString("loggedInUser", "") ?: ""
 
         val weightInput = view.findViewById<EditText>(R.id.weightInput)
         val chestInput = view.findViewById<EditText>(R.id.chestInput)
@@ -27,8 +45,53 @@ class MeasureFragment : Fragment() {
         val saveBtn = view.findViewById<Button>(R.id.saveBtn)
         historyContainer = view.findViewById(R.id.historyContainer)
 
+        galleryLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            val clipData = result.data?.clipData
+            val image = result.data?.data
+
+            try {
+                if (clipData != null) {
+                    for (i in 0 until clipData.itemCount) {
+                        val uri = clipData.getItemAt(i).uri
+                        val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
+                        progressPhotos.add(bitmap)
+                    }
+                } else if (image != null) {
+                    val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, image)
+                    progressPhotos.add(bitmap)
+                }
+            } catch (e: Exception) {
+                Log.e("MeasureFragment", "Error loading image(s): ${e.message}", e)
+            }
+        }
+
+        cameraLauncher = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+            bitmap?.let {
+                progressPhotos.add(it)
+            }
+        }
+
         uploadBtn.setOnClickListener {
-            Toast.makeText(requireContext(), "Photo upload feature coming soon!", Toast.LENGTH_SHORT).show()
+            val options = arrayOf("Choose from gallery", "Take a photo")
+            AlertDialog.Builder(requireContext())
+                .setTitle("Upload Progress Photo")
+                .setItems(options) { _, which ->
+                    when (which) {
+                        0 -> {
+                            val intent = Intent(Intent.ACTION_PICK).apply {
+                                type = "image/*"
+                                putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                            }
+                            galleryLauncher.launch(intent)
+                        }
+                        1 -> {
+                            cameraLauncher.launch(null)
+                        }
+                    }
+                }
+                .show()
         }
 
         saveBtn.setOnClickListener {
@@ -43,6 +106,21 @@ class MeasureFragment : Fragment() {
             }
 
             val now = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
+
+            val success = db.insertMeasurement(
+                username = userId,
+                weight = weight,
+                chest = chest,
+                waist = waist,
+                arms = arms,
+                timestamp = now
+            )
+
+            if (success) {
+                Toast.makeText(requireContext(), "Entry saved to database.", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(requireContext(), "Failed to save to database.", Toast.LENGTH_SHORT).show()
+            }
 
             val logCard = LinearLayout(requireContext()).apply {
                 orientation = LinearLayout.VERTICAL
@@ -68,7 +146,6 @@ class MeasureFragment : Fragment() {
                     Chest: $chest cm
                     Waist: $waist cm
                     Arms: $arms cm
-                    Photo: Not uploaded
                 """.trimIndent()
                 setTextColor(0xFFFFFFFF.toInt())
                 textSize = 14f
@@ -77,17 +154,43 @@ class MeasureFragment : Fragment() {
 
             logCard.addView(dateView)
             logCard.addView(details)
-            historyContainer.addView(logCard, 0)
 
-            Toast.makeText(requireContext(), "Entry saved.", Toast.LENGTH_SHORT).show()
+            if (progressPhotos.isNotEmpty()) {
+                val photoScroll = HorizontalScrollView(requireContext()).apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                }
+
+                val imageRow = LinearLayout(requireContext()).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                }
+
+                for (bitmap in progressPhotos) {
+                    val imageView = ImageView(requireContext()).apply {
+                        layoutParams = LinearLayout.LayoutParams(200, 200).apply {
+                            setMargins(8, 8, 8, 8)
+                        }
+                        setImageBitmap(bitmap)
+                        scaleType = ImageView.ScaleType.CENTER_CROP
+                    }
+                    imageRow.addView(imageView)
+                }
+
+                photoScroll.addView(imageRow)
+                logCard.addView(photoScroll)
+            }
+
+            historyContainer.addView(logCard, 0)
 
             weightInput.text.clear()
             chestInput.text.clear()
             waistInput.text.clear()
             armsInput.text.clear()
+            progressPhotos.clear()
         }
 
-        // Hide keyboard when tapping outside input fields
         view.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
                 val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
