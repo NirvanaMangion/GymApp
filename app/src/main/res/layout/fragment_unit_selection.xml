@@ -18,128 +18,60 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
 
-            <!-- Weight Unit Selection -->
+            <!-- Title -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Weight"
+                android:text="Select Unit System"
                 android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:layout_marginBottom="8dp" />
+                android:textSize="20sp"
+                android:layout_marginBottom="24dp"
+                android:gravity="center" />
 
-            <LinearLayout
+            <!-- European Units Button -->
+            <Button
+                android:id="@+id/europeanBtn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="24dp">
-
-                <Button
-                    android:id="@+id/kgBtn"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Kg"
-                    android:textColor="#FFFFFF"
-                    android:backgroundTint="#FFD600"
-                    android:layout_marginEnd="8dp" />
-
-                <Button
-                    android:id="@+id/lbsBtn"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="lbs"
-                    android:textColor="#000000"
-                    android:backgroundTint="#FFFFFF"
-                    android:layout_marginStart="8dp" />
-            </LinearLayout>
-
-            <!-- Distance Unit Selection -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Distance"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:layout_marginBottom="8dp" />
+                android:backgroundTint="#FFD600"
+                android:layout_marginBottom="16dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp"
+                android:textSize="18sp"
+                android:text="@string/european_units_text" />
 
-            <LinearLayout
+            <Button
+                android:id="@+id/imperialBtn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="24dp">
-
-                <Button
-                    android:id="@+id/kmBtn"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Kilometres"
-                    android:textColor="#FFFFFF"
-                    android:backgroundTint="#FFD600"
-                    android:layout_marginEnd="8dp" />
-
-                <Button
-                    android:id="@+id/milesBtn"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Miles"
-                    android:textColor="#000000"
-                    android:backgroundTint="#FFFFFF"
-                    android:layout_marginStart="8dp" />
-            </LinearLayout>
-
-            <!-- Measurement Unit Selection -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Body Measurements"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:layout_marginBottom="8dp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="32dp">
-
-                <Button
-                    android:id="@+id/cmBtn"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="cm"
-                    android:textColor="#FFFFFF"
-                    android:backgroundTint="#FFD600"
-                    android:layout_marginEnd="8dp" />
-
-                <Button
-                    android:id="@+id/inBtn"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="in"
-                    android:textColor="#000000"
-                    android:backgroundTint="#FFFFFF"
-                    android:layout_marginStart="8dp" />
-            </LinearLayout>
+                android:textAlignment="center"
+                android:gravity="center"
+                android:textColor="#000000"
+                android:backgroundTint="#FFFFFF"
+                android:layout_marginBottom="64dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp"
+                android:textSize="18sp"
+                android:text="@string/imperial_units_text" />
 
             <!-- Continue Button -->
             <Button
                 android:id="@+id/continueBtn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Continue"
-                android:textAllCaps="true"
+                android:text="continue"
+                android:textAllCaps="false"
                 android:textColor="#000000"
                 android:backgroundTint="#FFD600"
                 android:padding="12dp"
                 android:layout_gravity="center"
-                android:layout_marginTop="16dp" />
+                android:layout_marginTop="32dp" />
         </LinearLayout>
     </ScrollView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

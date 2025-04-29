@@ -27,13 +27,8 @@ class UnitSelectionFragment : Fragment() {
             return view
         }
 
-        // Buttons
-        val kgBtn = view.findViewById<Button>(R.id.kgBtn)
-        val lbsBtn = view.findViewById<Button>(R.id.lbsBtn)
-        val kmBtn = view.findViewById<Button>(R.id.kmBtn)
-        val milesBtn = view.findViewById<Button>(R.id.milesBtn)
-        val cmBtn = view.findViewById<Button>(R.id.cmBtn)
-        val inBtn = view.findViewById<Button>(R.id.inBtn)
+        val europeanBtn = view.findViewById<Button>(R.id.europeanBtn)
+        val imperialBtn = view.findViewById<Button>(R.id.imperialBtn)
 
         var weight = "Kg"
         var distance = "Kilometres"
@@ -43,35 +38,30 @@ class UnitSelectionFragment : Fragment() {
         val white = Color.parseColor("#FFFFFF")
         val black = Color.parseColor("#000000")
 
-        fun select(btn1: Button, btn2: Button, selected: Button, onSelect: () -> Unit) {
-            btn1.setBackgroundColor(if (btn1 == selected) yellow else white)
-            btn1.setTextColor(black)
+        fun select(selected: Button, other: Button, onSelect: () -> Unit) {
+            selected.setBackgroundColor(yellow)
+            selected.setTextColor(white)
 
-            btn2.setBackgroundColor(if (btn2 == selected) yellow else white)
-            btn2.setTextColor(black)
+            other.setBackgroundColor(white)
+            other.setTextColor(black)
 
             onSelect()
         }
 
-        kgBtn.setOnClickListener {
-            select(kgBtn, lbsBtn, kgBtn) { weight = "Kg" }
-        }
-        lbsBtn.setOnClickListener {
-            select(kgBtn, lbsBtn, lbsBtn) { weight = "lbs" }
-        }
-
-        kmBtn.setOnClickListener {
-            select(kmBtn, milesBtn, kmBtn) { distance = "Kilometres" }
-        }
-        milesBtn.setOnClickListener {
-            select(kmBtn, milesBtn, milesBtn) { distance = "Miles" }
+        europeanBtn.setOnClickListener {
+            select(europeanBtn, imperialBtn) {
+                weight = "Kg"
+                distance = "Kilometres"
+                measurement = "cm"
+            }
         }
 
-        cmBtn.setOnClickListener {
-            select(cmBtn, inBtn, cmBtn) { measurement = "cm" }
-        }
-        inBtn.setOnClickListener {
-            select(cmBtn, inBtn, inBtn) { measurement = "in" }
+        imperialBtn.setOnClickListener {
+            select(imperialBtn, europeanBtn) {
+                weight = "lbs"
+                distance = "Miles"
+                measurement = "in"
+            }
         }
 
         val continueBtn = view.findViewById<Button>(R.id.continueBtn)

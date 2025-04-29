@@ -2,6 +2,9 @@
 <resources>
     <string name="app_name">GymApp</string>
     <string name="measurements_title">Measurements</string>
+    <string name="european_units_text">European Units\n<small>(Kg, Kilometres, cm)</small></string>
+    <string name="imperial_units_text">Imperial Units\n<small>(lbs, Miles, in)</small></string>
+    <string name="unit_system_title">Choose Unit System</string>
     <string name="home">Home</string>
     <string name="push_past_limits">Push\npast\nlimits</string>
     <string name="my_routine">My Routine</string>

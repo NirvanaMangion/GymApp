@@ -59,16 +59,27 @@ class EmailSignupFragment : Fragment() {
                     toast("Username already exists.")
 
                 else -> {
+                    // Save the user
                     userDb.addUser(username, email, null, password)
                     toast("Account created!")
+
+                    // Save login session
                     val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
                     sharedPref.edit().putString("loggedInUser", username).apply()
 
+                    // Prepare the UnitSelectionFragment
                     val fragment = UnitSelectionFragment()
                     fragment.arguments = Bundle().apply {
                         putString("username", username)
                     }
 
+                    // 🚀 ACTUALLY LOAD THE UNIT SELECTION SCREEN
+                    (activity as? MainActivity)?.loadFragment(
+                        fragment = fragment,
+                        title = "Choose Unit",
+                        showUpArrow = true,
+                        showBottomNav = false
+                    )
                 }
             }
         }

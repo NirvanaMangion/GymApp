@@ -47,32 +47,51 @@ class PhoneSignupFragment : Fragment() {
             val fullPhone = "$code$phone"
 
             when {
+                // Check if any field is empty
                 username.isEmpty() || code.isEmpty() || phone.isEmpty() || password.isEmpty() ->
                     toast("Please fill in all fields.")
 
-                !code.startsWith("+") || code.length < 2 ->
-                    toast("Enter a valid country code starting with +")
+                // Check if country code is valid (starts with + and 1–4 digits)
+                !code.matches(Regex("^\\+\\d{1,4}\$")) ->
+                    toast("Enter a valid country code, like +356, +1, or +44.")
 
+                // Check if phone number is valid (only digits, 7–15 digits)
+                !phone.matches(Regex("^\\d{7,15}\$")) ->
+                    toast("Enter a valid phone number (7 to 15 digits, numbers only).")
+
+                // Check if password is strong enough
                 password.length < 6 || !password.any { it.isDigit() } || !password.any { it.isLetter() } ->
-                    toast("Password must be at least 6 characters, with letters and numbers.")
+                    toast("Password must be at least 6 characters with both letters and numbers.")
 
+                // Check if terms and conditions are accepted
                 !termsCheckbox.isChecked ->
                     toast("You must accept the terms.")
 
+                // Check if username already exists
                 userDb.checkUserExists(username) ->
                     toast("Username already exists.")
 
                 else -> {
+                    // Save user to database
                     userDb.addUser(username, null, fullPhone, password)
-                    toast("Account created!")
+                    toast("Account created successfully!")
+
+                    // Save username in SharedPreferences
                     val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
                     sharedPref.edit().putString("loggedInUser", username).apply()
 
+                    // Move to UnitSelectionFragment
                     val fragment = UnitSelectionFragment()
                     fragment.arguments = Bundle().apply {
                         putString("username", username)
                     }
 
+                    (activity as? MainActivity)?.loadFragment(
+                        fragment,
+                        title = "Choose Unit",
+                        showUpArrow = true,
+                        showBottomNav = false
+                    )
                 }
             }
         }
