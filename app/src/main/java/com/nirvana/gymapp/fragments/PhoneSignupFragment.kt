@@ -89,7 +89,7 @@ class PhoneSignupFragment : Fragment() {
                     (activity as? MainActivity)?.loadFragment(
                         fragment,
                         title = "Choose Unit",
-                        showUpArrow = true,
+                        showUpArrow = false,
                         showBottomNav = false
                     )
                 }

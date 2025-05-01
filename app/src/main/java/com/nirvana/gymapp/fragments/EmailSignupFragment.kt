@@ -77,7 +77,7 @@ class EmailSignupFragment : Fragment() {
                     (activity as? MainActivity)?.loadFragment(
                         fragment = fragment,
                         title = "Choose Unit",
-                        showUpArrow = true,
+                        showUpArrow = false,
                         showBottomNav = false
                     )
                 }

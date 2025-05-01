@@ -8,42 +8,43 @@ import android.util.Log
 import java.text.SimpleDateFormat
 import java.util.*
 
-class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", null, 6) {
+class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", null, 7) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("""
-    CREATE TABLE users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL UNIQUE,
-        email TEXT,
-        phone TEXT,
-        password TEXT NOT NULL,
-        weightUnit TEXT,
-        distanceUnit TEXT,
-        measurementUnit TEXT,
-        profileImageUri TEXT
-    );
-""".trimIndent())
-
+            CREATE TABLE users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL UNIQUE,
+                email TEXT,
+                phone TEXT,
+                password TEXT NOT NULL,
+                weightUnit TEXT,
+                distanceUnit TEXT,
+                measurementUnit TEXT,
+                profileImageUri TEXT
+            );
+        """)
 
         db.execSQL("""
             CREATE TABLE routine_exercises (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT,
                 name TEXT NOT NULL,
                 category TEXT,
                 sets INTEGER DEFAULT 1,
                 reps INTEGER DEFAULT 0,
                 weight REAL DEFAULT 0
             );
-        """.trimIndent())
+        """)
 
         db.execSQL("""
             CREATE TABLE saved_routines (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT,
                 name TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
-        """.trimIndent())
+        """)
 
         db.execSQL("""
             CREATE TABLE routine_exercise_items (
@@ -53,7 +54,7 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
                 category TEXT,
                 FOREIGN KEY (routine_id) REFERENCES saved_routines(id)
             );
-        """.trimIndent())
+        """)
 
         db.execSQL("""
             CREATE TABLE IF NOT EXISTS completed_routines_v2 (
@@ -63,71 +64,28 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
                 start_time INTEGER,
                 end_time INTEGER
             );
-        """.trimIndent())
+        """)
 
         db.execSQL("""
-    CREATE TABLE IF NOT EXISTS measurements (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL,
-        weight TEXT,
-        chest TEXT,
-        waist TEXT,
-        arms TEXT,
-        timestamp TEXT
-    );
-""".trimIndent())
-
+            CREATE TABLE IF NOT EXISTS measurements (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                weight TEXT,
+                chest TEXT,
+                waist TEXT,
+                arms TEXT,
+                timestamp TEXT
+            );
+        """)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        if (oldVersion < 2) {
-            db.execSQL("ALTER TABLE users ADD COLUMN weightUnit TEXT")
-            db.execSQL("ALTER TABLE users ADD COLUMN distanceUnit TEXT")
-            db.execSQL("ALTER TABLE users ADD COLUMN measurementUnit TEXT")
-        }
-        if (oldVersion < 3) {
-            db.execSQL("""
-            CREATE TABLE IF NOT EXISTS routine_exercises (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                category TEXT,
-                sets INTEGER DEFAULT 1,
-                reps INTEGER DEFAULT 0,
-                weight REAL DEFAULT 0
-            );
-        """.trimIndent())
-        }
-        if (oldVersion < 4) {
-            db.execSQL("""
-            CREATE TABLE IF NOT EXISTS saved_routines (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        """.trimIndent())
-            db.execSQL("""
-            CREATE TABLE IF NOT EXISTS routine_exercise_items (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                routine_id INTEGER,
-                name TEXT,
-                category TEXT,
-                FOREIGN KEY (routine_id) REFERENCES saved_routines(id)
-            );
-        """.trimIndent())
-        }
-        if (oldVersion < 5) {
-            db.execSQL("""
-            CREATE TABLE IF NOT EXISTS completed_routines_v2 (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id TEXT NOT NULL,
-                routine_name TEXT,
-                start_time INTEGER,
-                end_time INTEGER
-            );
-        """.trimIndent())
-        }
         if (oldVersion < 6) {
             db.execSQL("ALTER TABLE users ADD COLUMN profileImageUri TEXT")
+        }
+        if (oldVersion < 7) {
+            db.execSQL("ALTER TABLE routine_exercises ADD COLUMN username TEXT")
+            db.execSQL("ALTER TABLE saved_routines ADD COLUMN username TEXT")
         }
     }
 
@@ -168,9 +126,10 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         return db.update("users", values, "username = ?", arrayOf(username)) > 0
     }
 
-    fun addExerciseToRoutine(name: String, category: String) {
+    fun addExerciseToRoutine(username: String, name: String, category: String) {
         val db = writableDatabase
         val values = ContentValues().apply {
+            put("username", username)
             put("name", name)
             put("category", category)
             put("sets", 1)
@@ -180,9 +139,9 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         db.insert("routine_exercises", null, values)
     }
 
-    fun getRoutineExercises(): List<Pair<String, String>> {
+    fun getRoutineExercises(username: String): List<Pair<String, String>> {
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT name, category FROM routine_exercises", null)
+        val cursor = db.rawQuery("SELECT name, category FROM routine_exercises WHERE username = ?", arrayOf(username))
         val list = mutableListOf<Pair<String, String>>()
         while (cursor.moveToNext()) {
             val name = cursor.getString(0)
@@ -193,18 +152,19 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         return list
     }
 
-    fun clearRoutineExercises() {
-        writableDatabase.execSQL("DELETE FROM routine_exercises")
+    fun clearRoutineExercises(username: String) {
+        writableDatabase.delete("routine_exercises", "username = ?", arrayOf(username))
     }
 
-    fun saveRoutine(name: String) {
+    fun saveRoutine(username: String, name: String) {
         val db = writableDatabase
         val routineValues = ContentValues().apply {
+            put("username", username)
             put("name", name)
         }
         val routineId = db.insert("saved_routines", null, routineValues)
 
-        val exercises = getRoutineExercises()
+        val exercises = getRoutineExercises(username)
         for ((exerciseName, category) in exercises) {
             val itemValues = ContentValues().apply {
                 put("routine_id", routineId)
@@ -215,9 +175,9 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         }
     }
 
-    fun getAllSavedRoutines(): List<Pair<Int, String>> {
+    fun getAllSavedRoutines(username: String): List<Pair<Int, String>> {
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT id, name FROM saved_routines ORDER BY created_at DESC", null)
+        val cursor = db.rawQuery("SELECT id, name FROM saved_routines WHERE username = ? ORDER BY created_at DESC", arrayOf(username))
         val routines = mutableListOf<Pair<Int, String>>()
         while (cursor.moveToNext()) {
             val id = cursor.getInt(0)
@@ -244,7 +204,6 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         return list
     }
 
-    // ✅ Save completed routine to v2 table
     fun insertCompletedRoutineV2(userId: String, routineName: String, startTime: Long, endTime: Long) {
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -257,7 +216,6 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         Log.d("DB_INSERT", "insertCompletedRoutineV2: start=$startTime, end=$endTime, rowId=$result")
     }
 
-    // ✅ Get durations from completed_routines_v2
     fun getV2Durations(userId: String): Map<String, Int> {
         val db = readableDatabase
         val cursor = db.rawQuery(
@@ -270,34 +228,20 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
             val end = cursor.getLong(1)
             val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(start))
             val duration = ((end - start) / 1000 / 60).toInt()
-            val current = if (result.containsKey(date)) result[date]!! else 0
-            result[date] = current + duration
+            result[date] = result.getOrDefault(date, 0) + duration
         }
         cursor.close()
-        Log.d("ChartData", "V2 durations: $result")
         return result
     }
 
-    // ✅ Simulated volume based on duration
     fun getDailyVolumes(userId: String): Map<String, Int> {
         val rawDurations = getV2Durations(userId)
-        val result = mutableMapOf<String, Int>()
-        for ((date, duration) in rawDurations) {
-            result[date] = duration * 50 // e.g., 50kg/min
-        }
-        Log.d("ChartData", "V2 volumes: $result")
-        return result
+        return rawDurations.mapValues { it.value * 50 }
     }
 
-    // ✅ Simulated reps based on duration
     fun getDailyReps(userId: String): Map<String, Int> {
         val rawDurations = getV2Durations(userId)
-        val result = mutableMapOf<String, Int>()
-        for ((date, duration) in rawDurations) {
-            result[date] = duration * 2 // e.g., 2 reps/min
-        }
-        Log.d("ChartData", "V2 reps: $result")
-        return result
+        return rawDurations.mapValues { it.value * 2 }
     }
 
     data class RoutineLog(
@@ -322,13 +266,14 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
             val start = cursor.getLong(1)
             val end = cursor.getLong(2)
             val duration = ((end - start) / 1000 / 60).toInt()
-            val volume = duration * 50 // Example logic
+            val volume = duration * 50
             val reps = duration * 2
             result.add(RoutineLog(name, start, duration, volume, reps))
         }
         cursor.close()
         return result
     }
+
     fun getWorkoutHistoryLogs(userId: String): List<Triple<String, Long, Long>> {
         val db = readableDatabase
         val result = mutableListOf<Triple<String, Long, Long>>()
@@ -345,6 +290,7 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         cursor.close()
         return result
     }
+
     fun updateProfileImage(username: String, imageUri: String): Boolean {
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -366,6 +312,7 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         cursor.close()
         return result
     }
+
     fun insertMeasurement(
         username: String,
         weight: String,

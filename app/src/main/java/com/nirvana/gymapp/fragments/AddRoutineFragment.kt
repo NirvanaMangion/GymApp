@@ -7,6 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.activity.OnBackPressedCallback
+import android.content.Context
+import android.graphics.Typeface
 import androidx.fragment.app.Fragment
 import com.nirvana.gymapp.R
 import com.nirvana.gymapp.database.UserDatabase
@@ -31,9 +33,12 @@ class AddRoutineFragment : Fragment() {
         saveButton = view.findViewById(R.id.saveRoutineButton)
         addExerciseButton = view.findViewById(R.id.addExerciseBtn)
 
+        val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
+        val username = sharedPref.getString("loggedInUser", "guest") ?: "guest"
+
         userDb = UserDatabase(requireContext())
 
-        displayRoutineExercises()
+        displayRoutineExercises(username)
 
         addExerciseButton.setOnClickListener {
             (activity as? MainActivity)?.loadFragment(
@@ -46,7 +51,7 @@ class AddRoutineFragment : Fragment() {
 
         saveButton.setOnClickListener {
             val name = routineNameInput.text.toString().trim()
-            val exercises = userDb.getRoutineExercises()
+            val exercises = userDb.getRoutineExercises(username)
 
             when {
                 name.isEmpty() -> {
@@ -56,9 +61,9 @@ class AddRoutineFragment : Fragment() {
                     Toast.makeText(requireContext(), "Please add at least one exercise.", Toast.LENGTH_SHORT).show()
                 }
                 else -> {
-                    userDb.saveRoutine(name)  // <- Add this line
+                    userDb.saveRoutine(username, name)
                     Toast.makeText(requireContext(), "Routine '$name' saved!", Toast.LENGTH_SHORT).show()
-                    userDb.clearRoutineExercises()
+                    userDb.clearRoutineExercises(username)
                     (activity as? MainActivity)?.onBackPressed()
                 }
             }
@@ -73,10 +78,10 @@ class AddRoutineFragment : Fragment() {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 val name = routineNameInput.text.toString().trim()
-                val exercises = userDb.getRoutineExercises()
+                val exercises = userDb.getRoutineExercises("username")
 
                 if (name.isEmpty() || exercises.isEmpty()) {
-                    userDb.clearRoutineExercises()
+                    userDb.clearRoutineExercises("username")
                     isEnabled = false
                     requireActivity().onBackPressedDispatcher.onBackPressed()
                 } else {
@@ -87,8 +92,8 @@ class AddRoutineFragment : Fragment() {
         })
     }
 
-    private fun displayRoutineExercises() {
-        val exercises = userDb.getRoutineExercises()
+    private fun displayRoutineExercises(username: String) {
+        val exercises = userDb.getRoutineExercises(username)
         routineContainer.removeAllViews()
 
         for ((name, category) in exercises) {
@@ -106,7 +111,7 @@ class AddRoutineFragment : Fragment() {
                 text = name
                 setTextColor(Color.WHITE)
                 textSize = 16f
-                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTypeface(null, Typeface.BOLD)
             }
 
             val categoryView = TextView(requireContext()).apply {
@@ -131,5 +136,4 @@ class AddRoutineFragment : Fragment() {
             routineContainer.addView(divider)
         }
     }
-
 }

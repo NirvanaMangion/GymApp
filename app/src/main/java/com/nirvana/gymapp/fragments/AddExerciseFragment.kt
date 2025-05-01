@@ -7,11 +7,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import android.content.Context
 import androidx.fragment.app.Fragment
 import com.nirvana.gymapp.database.ExerciseDatabase
 import com.nirvana.gymapp.R
 import com.nirvana.gymapp.database.UserDatabase
 import com.nirvana.gymapp.activities.MainActivity
+
 
 class AddExerciseFragment : Fragment() {
 
@@ -33,6 +35,10 @@ class AddExerciseFragment : Fragment() {
         addButton = view.findViewById(R.id.addExerciseButton)
         addButton.visibility = View.GONE
 
+        // Get logged-in username
+        val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
+        val username = sharedPref.getString("loggedInUser", "guest") ?: "guest"
+
         userDb = UserDatabase(requireContext())
         allExercises = ExerciseDatabase(requireContext()).getAllExercises()
 
@@ -41,7 +47,7 @@ class AddExerciseFragment : Fragment() {
 
         addButton.setOnClickListener {
             for ((name, category) in selectedExercises) {
-                userDb.addExerciseToRoutine(name, category)
+                userDb.addExerciseToRoutine(username, name, category)  // Use username
             }
             Toast.makeText(requireContext(), "Exercises added!", Toast.LENGTH_SHORT).show()
             selectedExercises.clear()

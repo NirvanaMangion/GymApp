@@ -53,7 +53,7 @@
             android:textAllCaps="false"
             android:textColor="#FFFFFF"
             android:background="@drawable/rounded_background"
-            android:backgroundTint="#7A4FE2" />
+            android:backgroundTint="@color/yellow" />
 
         <TextView
             android:id="@+id/loginText"

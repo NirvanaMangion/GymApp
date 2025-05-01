@@ -1,15 +1,20 @@
 package com.nirvana.gymapp.activities
 
+import android.app.Activity
+import android.content.Context
+import android.graphics.Rect
 import android.os.Bundle
+import android.view.MotionEvent
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import com.nirvana.gymapp.R
 import com.nirvana.gymapp.fragments.*
-
 
 class MainActivity : AppCompatActivity() {
 
@@ -38,7 +43,7 @@ class MainActivity : AppCompatActivity() {
             when (intent.getStringExtra("start")) {
                 "email" -> loadFragment(EmailSignupFragment(), "Sign up", true, false)
                 "phone" -> loadFragment(PhoneSignupFragment(), "Sign up", true, false)
-                "unit" -> loadFragment(UnitSelectionFragment(), "Choose Unit", true, false)
+                "unit" -> loadFragment(UnitSelectionFragment(), "Choose Unit", false, false)
                 "login" -> loadFragment(LoginFragment(), "Log In", true, false)
                 else -> loadFragment(HomeFragment(), "Home", false, true)
             }
@@ -79,7 +84,7 @@ class MainActivity : AppCompatActivity() {
         if (fragmentManager.backStackEntryCount > 1) {
             fragmentManager.popBackStack()
 
-            fragmentManager.addOnBackStackChangedListener(object : androidx.fragment.app.FragmentManager.OnBackStackChangedListener {
+            fragmentManager.addOnBackStackChangedListener(object : FragmentManager.OnBackStackChangedListener {
                 override fun onBackStackChanged() {
                     val currentFragment = fragmentManager.findFragmentById(R.id.fragment_container)
                     when (currentFragment) {
@@ -103,7 +108,23 @@ class MainActivity : AppCompatActivity() {
                 }
             })
         } else {
-            finish()
+            super.onBackPressed() // ✅ called only when appropriate
         }
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (ev.action == MotionEvent.ACTION_DOWN) {
+            val v = currentFocus
+            if (v is android.widget.EditText) {
+                val outRect = Rect()
+                v.getGlobalVisibleRect(outRect)
+                if (!outRect.contains(ev.rawX.toInt(), ev.rawY.toInt())) {
+                    v.clearFocus()
+                    val imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(v.windowToken, 0)
+                }
+            }
+        }
+        return super.dispatchTouchEvent(ev)
     }
 }

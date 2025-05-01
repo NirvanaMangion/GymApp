@@ -5,6 +5,7 @@ import android.graphics.Typeface
 import android.os.Bundle
 import android.view.*
 import android.widget.*
+import android.content.Context
 import androidx.fragment.app.Fragment
 import com.nirvana.gymapp.R
 import com.nirvana.gymapp.database.UserDatabase
@@ -26,7 +27,14 @@ class HomeFragment : Fragment() {
         noRoutineText = view.findViewById(R.id.noRoutineText)
         val addRoutineBtn = view.findViewById<Button>(R.id.addRoutineBtn)
 
+        // Get logged-in username
+        val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
+        val username = sharedPref.getString("loggedInUser", "guest") ?: "guest"
+
         addRoutineBtn.setOnClickListener {
+            val userDb = UserDatabase(requireContext())
+            userDb.clearRoutineExercises(username)  // ✅ Clear temp data when starting fresh
+
             (activity as MainActivity).loadFragment(
                 AddRoutineFragment(),
                 title = "Add Routine",
@@ -38,7 +46,10 @@ class HomeFragment : Fragment() {
         dropdownText.setOnClickListener {
             val isVisible = routineListContainer.visibility == View.VISIBLE
             routineListContainer.visibility = if (isVisible) View.GONE else View.VISIBLE
-            noRoutineText.visibility = if (!isVisible && UserDatabase(requireContext()).getAllSavedRoutines().isEmpty()) View.VISIBLE else View.GONE
+
+            // Show "No routine yet" only if list is not visible and no routines
+            val hasRoutines = UserDatabase(requireContext()).getAllSavedRoutines(username).isNotEmpty()
+            noRoutineText.visibility = if (!isVisible && !hasRoutines) View.VISIBLE else View.GONE
 
             val arrowRes = if (isVisible) R.drawable.right_arrow else R.drawable.down_arrow
             dropdownText.setCompoundDrawablesWithIntrinsicBounds(0, 0, arrowRes, 0)
@@ -49,9 +60,14 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        displaySavedRoutines()
 
-        val hasRoutines = UserDatabase(requireContext()).getAllSavedRoutines().isNotEmpty()
+        // Get logged-in username
+        val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
+        val username = sharedPref.getString("loggedInUser", "guest") ?: "guest"
+
+        displaySavedRoutines(username)
+
+        val hasRoutines = UserDatabase(requireContext()).getAllSavedRoutines(username).isNotEmpty()
         routineListContainer.visibility = if (hasRoutines) View.VISIBLE else View.GONE
         noRoutineText.visibility = if (hasRoutines) View.GONE else View.VISIBLE
         dropdownText.setCompoundDrawablesWithIntrinsicBounds(
@@ -61,9 +77,9 @@ class HomeFragment : Fragment() {
         )
     }
 
-    private fun displaySavedRoutines() {
+    private fun displaySavedRoutines(username: String) {
         val db = UserDatabase(requireContext())
-        val routines = db.getAllSavedRoutines()
+        val routines = db.getAllSavedRoutines(username)
 
         routineListContainer.removeAllViews()
 
@@ -77,37 +93,24 @@ class HomeFragment : Fragment() {
             for ((id, name) in routines) {
                 val card = LinearLayout(requireContext()).apply {
                     orientation = LinearLayout.VERTICAL
-                    setBackgroundColor(Color.parseColor("#2A2A2A"))
+                    setBackgroundColor(Color.parseColor("#616161")) // Grey 700
                     setPadding(32, 24, 32, 24)
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
-                        280 // Enough space for title and 2 exercises
+                        280
                     ).apply {
-                        setMargins(0, 0, 0, 32)
+                        setMargins(16, 0, 16, 32) // Add spacing from screen edges
                     }
+                    gravity = Gravity.CENTER
                 }
 
                 val title = TextView(requireContext()).apply {
                     text = name
-                    textSize = 18f
-                    setTextColor(Color.WHITE)
-                    setTypeface(null, Typeface.BOLD)
-                }
-
-                val exercisePreview = LinearLayout(requireContext()).apply {
-                    orientation = LinearLayout.VERTICAL
-                    setPadding(0, 12, 0, 0)
-                }
-
-                val exercises = db.getExercisesForRoutine(id).take(2)
-
-                for (i in 0 until 2) {
-                    val previewText = TextView(requireContext()).apply {
-                        textSize = 14f
-                        setTextColor(Color.LTGRAY)
-                        text = if (i < exercises.size) "• ${exercises[i].first} (${exercises[i].second})" else " "
-                    }
-                    exercisePreview.addView(previewText)
+                    textSize = 22f
+                    setTextColor(Color.parseColor("#212121")) // Dark grey
+                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                    alpha = 0.85f
+                    gravity = Gravity.CENTER
                 }
 
                 card.setOnClickListener {
@@ -121,7 +124,6 @@ class HomeFragment : Fragment() {
                 }
 
                 card.addView(title)
-                card.addView(exercisePreview)
                 routineListContainer.addView(card)
             }
         }

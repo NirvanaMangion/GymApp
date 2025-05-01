@@ -11,25 +11,18 @@
         android:padding="32dp"
         android:gravity="center_horizontal">
 
-        <!-- Circular Profile Picture with icon inside -->
-        <FrameLayout
+        <ImageView
+            android:id="@+id/profileImageView"
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:layout_marginBottom="8dp"
-            android:background="@drawable/circle_background"
             android:layout_gravity="center"
-            android:gravity="center">
-
-            <ImageView
-                android:id="@+id/profileImageView"
-                android:layout_width="72dp"
-                android:layout_height="72dp"
-                android:scaleType="centerInside"
-            android:cropToPadding="true"
+            android:layout_marginBottom="8dp"
+            android:src="@drawable/profileicon"
+            android:scaleType="centerCrop"
+            android:contentDescription="Profile Icon"
             android:clipToOutline="true"
-            android:src="@drawable/personicon"
-            android:contentDescription="Profile Icon" />
-        </FrameLayout>
+        android:outlineProvider="background" />
+
 
 
 
@@ -42,7 +35,6 @@
             android:textColor="@android:color/white"
             android:textSize="14sp"
             android:layout_marginBottom="16dp" />
-
 
         <!-- No Data Box -->
         <FrameLayout
@@ -108,7 +100,7 @@
                 android:textColor="@android:color/white" />
         </LinearLayout>
 
-        <!-- Dashboard Title (left-aligned, bigger, white) -->
+        <!-- Dashboard Title -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -118,8 +110,7 @@
             android:layout_marginTop="24dp"
             android:layout_marginBottom="12dp" />
 
-
-        <!-- Dashboard Buttons: Only Workout History and Measures -->
+        <!-- Dashboard Buttons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -144,8 +135,6 @@
                 android:textColor="@android:color/white"
                 android:textAllCaps="false"
                 android:layout_marginTop="12dp" />
-
-
         </LinearLayout>
     </LinearLayout>
 </ScrollView>
