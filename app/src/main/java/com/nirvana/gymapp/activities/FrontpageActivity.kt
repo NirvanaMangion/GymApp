@@ -26,7 +26,7 @@ class FrontpageActivity : AppCompatActivity() {
         val loginText = SpannableStringBuilder("Already have an account? Log in")
         val start = loginText.indexOf("Log in")
         val end = start + "Log in".length
-        loginText.setSpan(ForegroundColorSpan(Color.parseColor("#AA88FF")), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        loginText.setSpan(ForegroundColorSpan(Color.parseColor("#FFD600")), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         loginView.text = loginText
 
         loginView.setOnClickListener {

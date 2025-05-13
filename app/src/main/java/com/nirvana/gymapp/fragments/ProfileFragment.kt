@@ -74,7 +74,7 @@ class ProfileFragment : Fragment() {
         if (!savedUri.isNullOrEmpty()) {
             profileImageView.setImageURI(Uri.parse(savedUri))
         } else {
-            profileImageView.setImageResource(R.drawable.personicon) // Default icon
+            profileImageView.setImageResource(R.drawable.profileicon) // Default icon
         }
 
         profileImageView.setOnClickListener {
