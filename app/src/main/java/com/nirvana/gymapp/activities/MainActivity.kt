@@ -68,15 +68,20 @@ class MainActivity : AppCompatActivity() {
         showUpArrow: Boolean,
         showBottomNav: Boolean
     ) {
-        titleText.text = title
-        customBack.visibility = if (showUpArrow) View.VISIBLE else View.GONE
-        bottomNav.visibility = if (showBottomNav) View.VISIBLE else View.GONE
-
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, fragment)
             .addToBackStack(null)
             .commit()
+
+        // Delay UI updates until the fragment is attached
+        supportFragmentManager.executePendingTransactions()
+
+        // Then update toolbar and bottom nav
+        titleText.text = title
+        customBack.visibility = if (showUpArrow) View.VISIBLE else View.GONE
+        bottomNav.visibility = if (showBottomNav) View.VISIBLE else View.GONE
     }
+
 
     override fun onBackPressed() {
         val fragmentManager = supportFragmentManager

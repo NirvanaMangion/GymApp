@@ -13,14 +13,16 @@
         android:gravity="center_horizontal">
 
         <!-- Circular Profile Picture with icon inside -->
-        <ImageView
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/profileImageView"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_gravity="center"
             android:layout_marginBottom="8dp"
             android:src="@drawable/profileicon"
-            android:scaleType="centerInside" />
+            android:scaleType="centerCrop"
+            app:shapeAppearanceOverlay="@style/CircleImage" />
+
 
 
         <!-- Username -->

@@ -17,17 +17,17 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Enter Your Body Measurements"
+            android:layout_marginBottom="12dp"
+            android:text="Enter Your Body Measurements:"
             android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:layout_marginBottom="12dp" />
+            android:textSize="18sp" />
 
         <!-- Row 1: Weight + Chest -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:layout_marginBottom="12dp"
+            android:orientation="horizontal"
             android:weightSum="2">
 
             <LinearLayout
@@ -39,50 +39,50 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="4dp"
                     android:text="Weight:"
                     android:textColor="#FFFFFF"
-                    android:textSize="14sp"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="4dp" />
+                    android:textSize="16dp" />
 
                 <EditText
                     android:id="@+id/weightInput"
                     android:layout_width="0dp"
-                    android:layout_weight="1"
                     android:layout_height="wrap_content"
-                    android:hint="kg"
-                    android:textColorHint="#AAAAAA"
-                    android:textColor="#FFFFFF"
+                    android:layout_weight="1"
                     android:backgroundTint="#888888"
-                    android:inputType="numberDecimal" />
+                    android:hint="kg"
+                    android:inputType="numberDecimal"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#AAAAAA" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
                 android:layout_weight="1"
-                android:orientation="horizontal"
-                android:layout_marginStart="8dp">
+                android:orientation="horizontal">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="4dp"
                     android:text="Chest:"
                     android:textColor="#FFFFFF"
-                    android:textSize="14sp"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="4dp" />
+                    android:textSize="16sp" />
 
                 <EditText
                     android:id="@+id/chestInput"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
+                    android:layout_width="77dp"
                     android:layout_height="wrap_content"
-                    android:hint="cm"
-                    android:textColorHint="#AAAAAA"
-                    android:textColor="#FFFFFF"
+                    android:layout_weight="1"
                     android:backgroundTint="#888888"
-                    android:inputType="numberDecimal" />
+                    android:hint="cm"
+                    android:inputType="numberDecimal"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#AAAAAA" />
             </LinearLayout>
         </LinearLayout>
 
@@ -90,8 +90,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:layout_marginBottom="24dp"
+            android:orientation="horizontal"
             android:weightSum="2">
 
             <LinearLayout
@@ -103,82 +103,95 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="4dp"
                     android:text="Waist:"
                     android:textColor="#FFFFFF"
-                    android:textSize="14sp"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="4dp" />
+                    android:textSize="16sp" />
 
                 <EditText
                     android:id="@+id/waistInput"
                     android:layout_width="0dp"
-                    android:layout_weight="1"
                     android:layout_height="wrap_content"
-                    android:hint="cm"
-                    android:textColorHint="#AAAAAA"
-                    android:textColor="#FFFFFF"
+                    android:layout_weight="1"
                     android:backgroundTint="#888888"
-                    android:inputType="numberDecimal" />
+                    android:hint="cm"
+                    android:inputType="numberDecimal"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#AAAAAA" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
                 android:layout_weight="1"
-                android:orientation="horizontal"
-                android:layout_marginStart="8dp">
+                android:orientation="horizontal">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="4dp"
                     android:text="Arms:"
                     android:textColor="#FFFFFF"
-                    android:textSize="14sp"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="4dp" />
+                    android:textSize="16sp" />
 
                 <EditText
                     android:id="@+id/armsInput"
                     android:layout_width="0dp"
-                    android:layout_weight="1"
                     android:layout_height="wrap_content"
-                    android:hint="cm"
-                    android:textColorHint="#AAAAAA"
-                    android:textColor="#FFFFFF"
+                    android:layout_weight="1"
                     android:backgroundTint="#888888"
-                    android:inputType="numberDecimal" />
+                    android:hint="cm"
+                    android:inputType="numberDecimal"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#AAAAAA" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Upload -->
+        <!-- Display selected photo count -->
+        <TextView
+            android:id="@+id/uploadedPhotosText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:textColor="#AAAAAA"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
+        <!-- Upload Progress Photo button -->
+
         <Button
             android:id="@+id/uploadBtn"
-            android:layout_width="match_parent"
+            android:layout_width="312dp"
             android:layout_height="wrap_content"
-            android:text="Upload Progress Picture"
-            android:backgroundTint="#333333"
-            android:textColor="#FFFFFF"
-            android:layout_marginBottom="16dp" />
+            android:layout_gravity="center"
+            android:layout_marginBottom="10dp"
+            android:backgroundTint="@color/grey_700"
+            android:text="Upload Progress Photo"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF" />
 
-        <!-- Save -->
         <Button
             android:id="@+id/saveBtn"
-            android:layout_width="match_parent"
+            android:layout_width="141dp"
             android:layout_height="wrap_content"
-            android:text="Save Entry"
+            android:layout_gravity="center"
+            android:layout_marginBottom="32dp"
             android:backgroundTint="#FFD600"
-            android:textColor="#000000"
-            android:layout_marginBottom="32dp" />
+            android:baselineAligned="false"
+            android:text="Save Entry"
+            android:textColor="#000000" />
 
-        <!-- Divider -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
             android:text="History"
             android:textColor="#FFFFFF"
             android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp" />
+            android:textStyle="bold" />
 
         <!-- Logs -->
         <LinearLayout

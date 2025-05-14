@@ -16,24 +16,27 @@ class HomeFragment : Fragment() {
     private lateinit var dropdownText: TextView
     private lateinit var routineListContainer: LinearLayout
     private lateinit var noRoutineText: TextView
+    private lateinit var rootLayout: View
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
 
+        rootLayout = view.findViewById(R.id.homeRootLayout)
+        rootLayout.visibility = View.INVISIBLE
+
         dropdownText = view.findViewById(R.id.myRoutineDropdown)
         routineListContainer = view.findViewById(R.id.routineListContainer)
         noRoutineText = view.findViewById(R.id.noRoutineText)
         val addRoutineBtn = view.findViewById<Button>(R.id.addRoutineBtn)
 
-        // Get logged-in username
         val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
         val username = sharedPref.getString("loggedInUser", "guest") ?: "guest"
 
         addRoutineBtn.setOnClickListener {
             val userDb = UserDatabase(requireContext())
-            userDb.clearRoutineExercises(username)  // ✅ Clear temp data when starting fresh
+            userDb.clearRoutineExercises(username)
 
             (activity as MainActivity).loadFragment(
                 AddRoutineFragment(),
@@ -47,7 +50,6 @@ class HomeFragment : Fragment() {
             val isVisible = routineListContainer.visibility == View.VISIBLE
             routineListContainer.visibility = if (isVisible) View.GONE else View.VISIBLE
 
-            // Show "No routine yet" only if list is not visible and no routines
             val hasRoutines = UserDatabase(requireContext()).getAllSavedRoutines(username).isNotEmpty()
             noRoutineText.visibility = if (!isVisible && !hasRoutines) View.VISIBLE else View.GONE
 
@@ -61,7 +63,6 @@ class HomeFragment : Fragment() {
     override fun onResume() {
         super.onResume()
 
-        // Get logged-in username
         val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
         val username = sharedPref.getString("loggedInUser", "guest") ?: "guest"
 
@@ -75,6 +76,10 @@ class HomeFragment : Fragment() {
             if (hasRoutines) R.drawable.down_arrow else R.drawable.right_arrow,
             0
         )
+
+        rootLayout.alpha = 0f
+        rootLayout.visibility = View.VISIBLE
+        rootLayout.animate().alpha(1f).setDuration(150).start()
     }
 
     private fun displaySavedRoutines(username: String) {
@@ -93,13 +98,13 @@ class HomeFragment : Fragment() {
             for ((id, name) in routines) {
                 val card = LinearLayout(requireContext()).apply {
                     orientation = LinearLayout.VERTICAL
-                    setBackgroundColor(Color.parseColor("#616161")) // Grey 700
+                    setBackgroundColor(Color.parseColor("#E0E0E0"))
                     setPadding(32, 24, 32, 24)
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         280
                     ).apply {
-                        setMargins(16, 0, 16, 32) // Add spacing from screen edges
+                        setMargins(16, 0, 16, 32)
                     }
                     gravity = Gravity.CENTER
                 }
@@ -107,7 +112,7 @@ class HomeFragment : Fragment() {
                 val title = TextView(requireContext()).apply {
                     text = name
                     textSize = 22f
-                    setTextColor(Color.parseColor("#212121")) // Dark grey
+                    setTextColor(Color.parseColor("#212121"))
                     typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
                     alpha = 0.85f
                     gravity = Gravity.CENTER

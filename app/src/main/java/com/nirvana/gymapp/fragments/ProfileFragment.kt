@@ -16,6 +16,8 @@ import androidx.fragment.app.Fragment
 import com.nirvana.gymapp.R
 import com.nirvana.gymapp.database.UserDatabase
 import com.nirvana.gymapp.activities.MainActivity
+import java.io.File
+import java.io.FileOutputStream
 
 class ProfileFragment : Fragment() {
 
@@ -44,13 +46,16 @@ class ProfileFragment : Fragment() {
             }
         }
 
-        // Camera launcher
+        // Camera launcher with save logic
         cameraLauncher = registerForActivityResult(
             ActivityResultContracts.TakePicturePreview()
         ) { bitmap: Bitmap? ->
             bitmap?.let {
-                profileImageView.setImageBitmap(it)
-                // Note: Not saved to DB since it's just a Bitmap. You could encode/save it to internal storage if needed.
+                val savedUri = saveBitmapToInternalStorage(it)
+                if (savedUri != null) {
+                    profileImageView.setImageURI(savedUri)
+                    db.updateProfileImage(userId, savedUri.toString()) // Persist to DB
+                }
             }
         }
     }
@@ -230,5 +235,20 @@ class ProfileFragment : Fragment() {
                 }
             }
             .show()
+    }
+
+    private fun saveBitmapToInternalStorage(bitmap: Bitmap): Uri? {
+        return try {
+            val filename = "profile_${System.currentTimeMillis()}.png"
+            val file = File(requireContext().filesDir, filename)
+            val stream = FileOutputStream(file)
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            stream.flush()
+            stream.close()
+            Uri.fromFile(file)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 }

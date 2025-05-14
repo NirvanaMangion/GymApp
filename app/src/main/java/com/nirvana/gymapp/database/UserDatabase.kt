@@ -4,14 +4,26 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.graphics.Bitmap
 import android.util.Log
+import java.io.File
+import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
-class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", null, 7) {
+data class MeasurementEntry(
+    val timestamp: String,
+    val weight: String,
+    val chest: String,
+    val waist: String,
+    val arms: String
+)
+
+class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", null, 8) {
 
     override fun onCreate(db: SQLiteDatabase) {
-        db.execSQL("""
+        db.execSQL(
+            """
             CREATE TABLE users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT NOT NULL UNIQUE,
@@ -23,9 +35,11 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
                 measurementUnit TEXT,
                 profileImageUri TEXT
             );
-        """)
+        """
+        )
 
-        db.execSQL("""
+        db.execSQL(
+            """
             CREATE TABLE routine_exercises (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT,
@@ -35,18 +49,22 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
                 reps INTEGER DEFAULT 0,
                 weight REAL DEFAULT 0
             );
-        """)
+        """
+        )
 
-        db.execSQL("""
+        db.execSQL(
+            """
             CREATE TABLE saved_routines (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT,
                 name TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
-        """)
+        """
+        )
 
-        db.execSQL("""
+        db.execSQL(
+            """
             CREATE TABLE routine_exercise_items (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 routine_id INTEGER,
@@ -54,9 +72,11 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
                 category TEXT,
                 FOREIGN KEY (routine_id) REFERENCES saved_routines(id)
             );
-        """)
+        """
+        )
 
-        db.execSQL("""
+        db.execSQL(
+            """
             CREATE TABLE IF NOT EXISTS completed_routines_v2 (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id TEXT NOT NULL,
@@ -64,9 +84,11 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
                 start_time INTEGER,
                 end_time INTEGER
             );
-        """)
+        """
+        )
 
-        db.execSQL("""
+        db.execSQL(
+            """
             CREATE TABLE IF NOT EXISTS measurements (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT NOT NULL,
@@ -76,18 +98,103 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
                 arms TEXT,
                 timestamp TEXT
             );
-        """)
+        """
+        )
+
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS progress_photos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                timestamp TEXT NOT NULL,
+                photo_path TEXT NOT NULL
+            );
+        """
+        )
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        if (oldVersion < 6) {
-            db.execSQL("ALTER TABLE users ADD COLUMN profileImageUri TEXT")
-        }
-        if (oldVersion < 7) {
-            db.execSQL("ALTER TABLE routine_exercises ADD COLUMN username TEXT")
-            db.execSQL("ALTER TABLE saved_routines ADD COLUMN username TEXT")
+        if (oldVersion < 8) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS progress_photos (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    photo_path TEXT NOT NULL
+                );
+            """
+            )
         }
     }
+
+    fun insertProgressPhoto(username: String, timestamp: String, photoPath: String): Boolean {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("username", username)
+            put("timestamp", timestamp)
+            put("photo_path", photoPath)
+        }
+        return db.insert("progress_photos", null, values) != -1L
+    }
+
+    fun getPhotosForMeasurement(username: String, timestamp: String): List<String> {
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT photo_path FROM progress_photos WHERE username = ? AND timestamp = ?",
+            arrayOf(username, timestamp)
+        )
+        val paths = mutableListOf<String>()
+        while (cursor.moveToNext()) {
+            paths.add(cursor.getString(0))
+        }
+        cursor.close()
+        return paths
+    }
+
+    fun deleteMeasurement(username: String, timestamp: String) {
+        val db = writableDatabase
+
+        val photoPaths = getPhotosForMeasurement(username, timestamp)
+        for (path in photoPaths) {
+            try {
+                File(path).delete()
+            } catch (e: Exception) {
+                Log.e("UserDatabase", "Failed to delete image: $path")
+            }
+        }
+
+        db.delete("progress_photos", "username = ? AND timestamp = ?", arrayOf(username, timestamp))
+        db.delete("measurements", "username = ? AND timestamp = ?", arrayOf(username, timestamp))
+    }
+
+    fun getMeasurementsForUser(username: String): List<MeasurementEntry> {
+        val list = mutableListOf<MeasurementEntry>()
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT timestamp, weight, chest, waist, arms FROM measurements WHERE username = ? ORDER BY timestamp DESC",
+            arrayOf(username)
+        )
+        while (cursor.moveToNext()) {
+            val timestamp = cursor.getString(0)
+            val weight = cursor.getString(1)
+            val chest = cursor.getString(2)
+            val waist = cursor.getString(3)
+            val arms = cursor.getString(4)
+            list.add(MeasurementEntry(timestamp, weight, chest, waist, arms))
+        }
+        cursor.close()
+        return list
+    }
+
+    fun savePhotoToStorage(bitmap: Bitmap, filename: String): String {
+        val file = File(context.filesDir, filename)
+         FileOutputStream(file).use { out ->
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+        }
+        return file.absolutePath
+    }
+
 
     fun addUser(username: String, email: String?, phone: String?, password: String): Boolean {
         val db = writableDatabase
