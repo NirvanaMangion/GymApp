@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.graphics.PorterDuff
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -272,12 +273,13 @@ class MeasureFragment : Fragment() {
                 val bitmap = BitmapFactory.decodeFile(path)
                 if (bitmap != null) {
                     val imageView = ImageView(context).apply {
-                        layoutParams = LinearLayout.LayoutParams(200, 200).apply {
-                            setMargins(8, 8, 8, 8)
+                        layoutParams = LinearLayout.LayoutParams(300, 300).apply { // increased from 200
+                            setMargins(12, 12, 12, 12)
                         }
                         setImageBitmap(bitmap)
                         scaleType = ImageView.ScaleType.CENTER_CROP
                     }
+
                     imageRow.addView(imageView)
                 }
             }
@@ -301,8 +303,14 @@ class MeasureFragment : Fragment() {
         val deleteBtn = ImageButton(context).apply {
             setImageResource(R.drawable.binicon)
             background = null
+            layoutParams = LinearLayout.LayoutParams(150, 150).apply {
+                setMargins(0, 24, 0, 0)
+            }
+            scaleType = ImageView.ScaleType.CENTER
+            adjustViewBounds = true
             setColorFilter(Color.RED)
-            layoutParams = LinearLayout.LayoutParams(44, 44)
+            contentDescription = "Delete Entry"
+            visibility = View.VISIBLE
             setOnClickListener {
                 AlertDialog.Builder(context)
                     .setTitle("Delete Entry")
@@ -317,14 +325,13 @@ class MeasureFragment : Fragment() {
             }
         }
 
+
         deleteRow.addView(deleteBtn)
         logCard.addView(deleteRow)
-
         historyContainer.addView(logCard, 0)
-
     }
 
-    // 👇 Place it here
+    // Save photo to internal storage
     private fun savePhotoToStorage(bitmap: Bitmap, filename: String): String {
         val file = File(requireContext().filesDir, filename)
         FileOutputStream(file).use { out ->
