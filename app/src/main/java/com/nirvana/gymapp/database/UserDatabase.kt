@@ -22,7 +22,8 @@ data class MeasurementEntry(
 class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", null, 8) {
 
     override fun onCreate(db: SQLiteDatabase) {
-        db.execSQL("""
+        db.execSQL(
+            """
             CREATE TABLE users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT NOT NULL UNIQUE,
@@ -34,9 +35,11 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
                 measurementUnit TEXT,
                 profileImageUri TEXT
             );
-        """)
+        """
+        )
 
-        db.execSQL("""
+        db.execSQL(
+            """
             CREATE TABLE routine_exercises (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT,
@@ -46,18 +49,22 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
                 reps INTEGER DEFAULT 0,
                 weight REAL DEFAULT 0
             );
-        """)
+        """
+        )
 
-        db.execSQL("""
+        db.execSQL(
+            """
             CREATE TABLE saved_routines (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT,
                 name TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
-        """)
+        """
+        )
 
-        db.execSQL("""
+        db.execSQL(
+            """
             CREATE TABLE routine_exercise_items (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 routine_id INTEGER,
@@ -65,9 +72,11 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
                 category TEXT,
                 FOREIGN KEY (routine_id) REFERENCES saved_routines(id)
             );
-        """)
+        """
+        )
 
-        db.execSQL("""
+        db.execSQL(
+            """
             CREATE TABLE IF NOT EXISTS completed_routines_v2 (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id TEXT NOT NULL,
@@ -75,9 +84,11 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
                 start_time INTEGER,
                 end_time INTEGER
             );
-        """)
+        """
+        )
 
-        db.execSQL("""
+        db.execSQL(
+            """
             CREATE TABLE IF NOT EXISTS measurements (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT NOT NULL,
@@ -87,28 +98,33 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
                 arms TEXT,
                 timestamp TEXT
             );
-        """)
+        """
+        )
 
-        db.execSQL("""
+        db.execSQL(
+            """
             CREATE TABLE IF NOT EXISTS progress_photos (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT NOT NULL,
                 timestamp TEXT NOT NULL,
                 photo_path TEXT NOT NULL
             );
-        """)
+        """
+        )
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         if (oldVersion < 8) {
-            db.execSQL("""
+            db.execSQL(
+                """
                 CREATE TABLE IF NOT EXISTS progress_photos (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT NOT NULL,
                     timestamp TEXT NOT NULL,
                     photo_path TEXT NOT NULL
                 );
-            """)
+            """
+            )
         }
     }
 
@@ -177,7 +193,7 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         return file.absolutePath
     }
 
-fun addUser(username: String, email: String?, phone: String?, password: String): Boolean {
+    fun addUser(username: String, email: String?, phone: String?, password: String): Boolean {
         val db = writableDatabase
         val values = ContentValues().apply {
             put("username", username)
@@ -187,6 +203,26 @@ fun addUser(username: String, email: String?, phone: String?, password: String):
         }
         return db.insert("users", null, values) != -1L
     }
+
+    fun getPasswordForUser(username: String): String? {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT password FROM users WHERE username = ?", arrayOf(username))
+        var password: String? = null
+        if (cursor.moveToFirst()) {
+            password = cursor.getString(0)
+        }
+        cursor.close()
+        return password
+    }
+
+    fun updateUserPassword(username: String, newPassword: String): Boolean {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("password", newPassword)
+        }
+        return db.update("users", values, "username = ?", arrayOf(username)) > 0
+    }
+
 
     fun checkUserExists(username: String): Boolean {
         val db = readableDatabase
@@ -198,11 +234,31 @@ fun addUser(username: String, email: String?, phone: String?, password: String):
 
     fun validateCredentials(username: String, password: String): Boolean {
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT * FROM users WHERE username = ? AND password = ?", arrayOf(username, password))
+        val cursor = db.rawQuery(
+            "SELECT * FROM users WHERE username = ? AND password = ?",
+            arrayOf(username, password)
+        )
         val valid = cursor.count > 0
         cursor.close()
         return valid
     }
+
+    fun getUserDetails(username: String): Pair<String?, String?> {
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT email, phone FROM users WHERE username = ?",
+            arrayOf(username)
+        )
+        var email: String? = null
+        var phone: String? = null
+        if (cursor.moveToFirst()) {
+            email = cursor.getString(0)
+            phone = cursor.getString(1)
+        }
+        cursor.close()
+        return Pair(email, phone)
+    }
+
 
     fun setUserUnits(username: String, weight: String, distance: String, measure: String): Boolean {
         val db = writableDatabase

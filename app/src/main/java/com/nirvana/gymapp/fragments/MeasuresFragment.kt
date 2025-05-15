@@ -6,7 +6,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.graphics.PorterDuff
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -52,7 +51,6 @@ class MeasureFragment : Fragment() {
         historyContainer = view.findViewById(R.id.historyContainer)
         uploadedPhotosText = view.findViewById(R.id.uploadedPhotosText)
 
-        // Load previous measurements
         val previousEntries = db.getMeasurementsForUser(userId)
         for ((timestamp, weight, chest, waist, arms) in previousEntries) {
             addMeasurementToHistory(timestamp, weight, chest, waist, arms)
@@ -68,13 +66,11 @@ class MeasureFragment : Fragment() {
                 if (clipData != null) {
                     for (i in 0 until clipData.itemCount) {
                         val uri = clipData.getItemAt(i).uri
-                        val bitmap =
-                            MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
+                        val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
                         progressPhotos.add(bitmap)
                     }
                 } else if (image != null) {
-                    val bitmap =
-                        MediaStore.Images.Media.getBitmap(requireContext().contentResolver, image)
+                    val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, image)
                     progressPhotos.add(bitmap)
                 }
                 if (progressPhotos.isNotEmpty()) {
@@ -86,14 +82,13 @@ class MeasureFragment : Fragment() {
             }
         }
 
-        cameraLauncher =
-            registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
-                bitmap?.let {
-                    progressPhotos.add(it)
-                    uploadedPhotosText.text = "${progressPhotos.size} photo(s) selected"
-                    uploadedPhotosText.visibility = View.VISIBLE
-                }
+        cameraLauncher = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+            bitmap?.let {
+                progressPhotos.add(it)
+                uploadedPhotosText.text = "${progressPhotos.size} photo(s) selected"
+                uploadedPhotosText.visibility = View.VISIBLE
             }
+        }
 
         uploadBtn.setOnClickListener {
             val options = arrayOf("Choose from gallery", "Take a photo")
@@ -108,7 +103,6 @@ class MeasureFragment : Fragment() {
                             }
                             galleryLauncher.launch(intent)
                         }
-
                         1 -> {
                             cameraLauncher.launch(null)
                         }
@@ -124,21 +118,12 @@ class MeasureFragment : Fragment() {
             val arms = armsInput.text.toString().trim()
 
             if (weight.isEmpty() || chest.isEmpty() || waist.isEmpty() || arms.isEmpty()) {
-                Toast.makeText(requireContext(), "Please fill in all fields.", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(requireContext(), "Please fill in all fields.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             val now = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
-
-            val success = db.insertMeasurement(
-                username = userId,
-                weight = weight,
-                chest = chest,
-                waist = waist,
-                arms = arms,
-                timestamp = now
-            )
+            val success = db.insertMeasurement(userId, weight, chest, waist, arms, now)
 
             if (success) {
                 for ((index, photo) in progressPhotos.withIndex()) {
@@ -148,12 +133,9 @@ class MeasureFragment : Fragment() {
                 }
 
                 addMeasurementToHistory(now, weight, chest, waist, arms)
-
-                Toast.makeText(requireContext(), "Entry saved to database.", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(requireContext(), "Entry saved to database.", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(requireContext(), "Failed to save to database.", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(requireContext(), "Failed to save to database.", Toast.LENGTH_SHORT).show()
             }
 
             weightInput.text.clear()
@@ -167,8 +149,7 @@ class MeasureFragment : Fragment() {
 
         view.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
-                val imm =
-                    requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.hideSoftInputFromWindow(view.windowToken, 0)
             }
             false
@@ -198,20 +179,11 @@ class MeasureFragment : Fragment() {
 
         val topRow = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-        }
-
-        val unitLabel = TextView(context).apply {
-            text = "kg / cm"
-            setTextColor(0xFFAAAAAA.toInt())
-            textSize = 13f
-        }
-
-        val spacer = Space(context).apply {
-            layoutParams = LinearLayout.LayoutParams(0, 0, 1f)
         }
 
         val dateView = TextView(context).apply {
@@ -220,97 +192,18 @@ class MeasureFragment : Fragment() {
             textSize = 13f
         }
 
-        topRow.addView(unitLabel)
-        topRow.addView(spacer)
-        topRow.addView(dateView)
-        logCard.addView(topRow)
-
-        val entries = listOf("Weight" to weight, "Chest" to chest, "Waist" to waist, "Arms" to arms)
-        for ((label, value) in entries) {
-            val unit = if (label == "Weight") "kg" else "cm"
-            val fullText = "$label: $value $unit"
-            val styledText = android.text.SpannableString(fullText).apply {
-                setSpan(
-                    android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
-                    0,
-                    label.length,
-                    0
-                )
-                setSpan(
-                    android.text.style.RelativeSizeSpan(0.8f),
-                    fullText.indexOf(unit),
-                    fullText.length,
-                    0
-                )
-            }
-
-            val textView = TextView(context).apply {
-                text = styledText
-                textSize = 16f
-                setTextColor(0xFFFFFFFF.toInt())
-                setPadding(0, 8, 0, 0)
-            }
-            logCard.addView(textView)
-        }
-
-        // Progress photos in horizontal scroll
-        val photoPaths = db.getPhotosForMeasurement(userId, timestamp)
-        if (photoPaths.isNotEmpty()) {
-            val scrollView = HorizontalScrollView(context).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    topMargin = 16
-                }
-            }
-
-            val imageRow = LinearLayout(context).apply {
-                orientation = LinearLayout.HORIZONTAL
-            }
-
-            for (path in photoPaths) {
-                val bitmap = BitmapFactory.decodeFile(path)
-                if (bitmap != null) {
-                    val imageView = ImageView(context).apply {
-                        layoutParams = LinearLayout.LayoutParams(300, 300).apply { // increased from 200
-                            setMargins(12, 12, 12, 12)
-                        }
-                        setImageBitmap(bitmap)
-                        scaleType = ImageView.ScaleType.CENTER_CROP
-                    }
-
-                    imageRow.addView(imageView)
-                }
-            }
-
-            scrollView.addView(imageRow)
-            logCard.addView(scrollView)
-        }
-
-// Red bin icon at bottom-right
-        val deleteRow = LinearLayout(context).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.END
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                topMargin = 8
-            }
+        val spacer = Space(context).apply {
+            layoutParams = LinearLayout.LayoutParams(0, 0, 1f)
         }
 
         val deleteBtn = ImageButton(context).apply {
             setImageResource(R.drawable.binicon)
             background = null
-            layoutParams = LinearLayout.LayoutParams(150, 150).apply {
-                setMargins(0, 24, 0, 0)
-            }
-            scaleType = ImageView.ScaleType.CENTER
+            layoutParams = LinearLayout.LayoutParams(130, 130) // larger bin icon
+            scaleType = ImageView.ScaleType.FIT_CENTER
             adjustViewBounds = true
             setColorFilter(Color.RED)
             contentDescription = "Delete Entry"
-            visibility = View.VISIBLE
             setOnClickListener {
                 AlertDialog.Builder(context)
                     .setTitle("Delete Entry")
@@ -325,13 +218,92 @@ class MeasureFragment : Fragment() {
             }
         }
 
+        topRow.addView(dateView)
+        topRow.addView(spacer)
+        topRow.addView(deleteBtn)
+        logCard.addView(topRow)
 
-        deleteRow.addView(deleteBtn)
-        logCard.addView(deleteRow)
+        logCard.addView(Space(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 16
+            )
+        })
+
+        val entries = listOf("Weight" to weight, "Chest" to chest, "Waist" to waist, "Arms" to arms)
+        for ((label, value) in entries) {
+            val unit = if (label == "Weight") "kg" else "cm"
+            val fullText = "$label: $value $unit"
+            val styledText = android.text.SpannableString(fullText).apply {
+                setSpan(android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, label.length, 0)
+                setSpan(android.text.style.RelativeSizeSpan(0.8f), fullText.indexOf(unit), fullText.length, 0)
+            }
+
+            val textView = TextView(context).apply {
+                text = styledText
+                textSize = 16f
+                setTextColor(0xFFFFFFFF.toInt())
+                setPadding(0, 8, 0, 0)
+            }
+            logCard.addView(textView)
+        }
+
+        // ⬆️ Extra space before photo section
+        logCard.addView(Space(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 48
+            )
+        })
+
+        val photoPaths = db.getPhotosForMeasurement(userId, timestamp)
+        if (photoPaths.isNotEmpty()) {
+            val scrollView = HorizontalScrollView(context).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            }
+
+            val imageRow = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+            }
+
+            for (path in photoPaths) {
+                val bitmap = BitmapFactory.decodeFile(path)
+                if (bitmap != null) {
+                    val imageView = ImageView(context).apply {
+                        layoutParams = LinearLayout.LayoutParams(300, 300).apply {
+                            setMargins(12, 12, 12, 0)
+                        }
+                        setImageBitmap(bitmap)
+                        scaleType = ImageView.ScaleType.CENTER_CROP
+
+                        setOnClickListener {
+                            AlertDialog.Builder(context)
+                                .setTitle("Progress Photo")
+                                .setView(ImageView(context).apply {
+                                    setImageBitmap(bitmap)
+                                    scaleType = ImageView.ScaleType.FIT_CENTER
+                                    adjustViewBounds = true
+                                    setPadding(32, 32, 32, 32)
+                                })
+                                .setPositiveButton("Close", null)
+                                .show()
+                        }
+                    }
+                    imageRow.addView(imageView)
+                }
+            }
+
+            scrollView.addView(imageRow)
+            logCard.addView(scrollView)
+        }
+
         historyContainer.addView(logCard, 0)
     }
 
-    // Save photo to internal storage
+
+
+
     private fun savePhotoToStorage(bitmap: Bitmap, filename: String): String {
         val file = File(requireContext().filesDir, filename)
         FileOutputStream(file).use { out ->

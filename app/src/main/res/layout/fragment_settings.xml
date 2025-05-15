@@ -11,41 +11,11 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Switch Tabs -->
-        <LinearLayout
-            android:id="@+id/switchTabs"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="#2A2A2A"
-            android:padding="8dp"
-            android:layout_marginBottom="16dp">
-
-            <Button
-                android:id="@+id/btnPersonal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Personal Information"
-                android:textAllCaps="false"
-                android:backgroundTint="#444444"
-                android:textColor="@android:color/white"
-                android:layout_marginBottom="4dp" />
-
-            <Button
-                android:id="@+id/btnEmailPass"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Emails and Passwords"
-                android:textAllCaps="false"
-                android:backgroundTint="#2A2A2A"
-                android:textColor="#AAAAAA" />
-        </LinearLayout>
-
         <!-- Personal Info Layout -->
         <LinearLayout
             android:id="@+id/personalLayout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp"
             android:background="#2A2A2A"
@@ -60,119 +30,69 @@
                 android:textStyle="bold"
                 android:layout_marginBottom="16dp" />
 
-            <!-- Profile Picture Placeholder -->
+            <!-- Profile Picture -->
             <ImageView
                 android:id="@+id/profileImage"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
                 android:layout_gravity="center"
-                android:src="@drawable/personicon"
-                android:tint="#AAAAAA"
-                android:layout_marginBottom="12dp" />
+                android:scaleType="centerCrop"
+                android:background="@drawable/circle_background"
+                android:layout_marginBottom="8dp" />
 
             <Button
                 android:id="@+id/btnChangePicture"
+                android:layout_width="120dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center"
+                android:layout_marginBottom="32dp"
+                android:backgroundTint="@color/grey_400"
+                android:text="Change Profile Photo"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="11sp" />
+
+            <!-- Account Info -->
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Change Picture"
-                android:textAllCaps="false"
-                android:backgroundTint="#FFD600"
-                android:textColor="#000000"
-                android:layout_gravity="center"
+                android:text="Account Info"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:id="@+id/accountEmailOrPhone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Email: example@email.com"
+                android:textColor="@android:color/white"
+                android:textSize="15sp"
+                android:textStyle="normal"
+                android:layout_marginBottom="6dp" />
+
+            <TextView
+                android:id="@+id/accountUsername"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Username: user"
+                android:textColor="@android:color/white"
+                android:textSize="15sp"
+                android:textStyle="normal"
                 android:layout_marginBottom="24dp" />
 
-            <!-- Fields -->
-            <EditText
-                android:id="@+id/firstName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="First Name"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#AAAAAA"
-                android:backgroundTint="#555555"
-                android:layout_marginBottom="12dp" />
-
-            <EditText
-                android:id="@+id/lastName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Last Name"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#AAAAAA"
-                android:backgroundTint="#555555"
-                android:layout_marginBottom="12dp" />
-
-            <EditText
-                android:id="@+id/email"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Email or Phone"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#AAAAAA"
-                android:backgroundTint="#555555"
-                android:layout_marginBottom="12dp" />
-
+            <!-- Password Section Title -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Theme"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
-
-            <RadioGroup
-                android:id="@+id/themeGroup"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="24dp">
-
-                <RadioButton
-                    android:id="@+id/btnLightMode"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Light"
-                    android:textColor="#FFFFFF" />
-
-                <RadioButton
-                    android:id="@+id/btnDarkMode"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Dark"
-                    android:textColor="#FFFFFF"
-                    android:layout_marginStart="16dp" />
-            </RadioGroup>
-        </LinearLayout>
-
-        <!-- Email & Password Layout -->
-        <LinearLayout
-            android:id="@+id/passwordLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:background="#2A2A2A"
-            android:visibility="gone">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Emails and Password"
-                android:textColor="@android:color/white"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="16dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Change Password:"
+                android:text="Change Password"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="12dp" />
 
+            <!-- Change Password Section -->
             <EditText
                 android:id="@+id/currentPassword"
                 android:layout_width="match_parent"
@@ -182,7 +102,8 @@
                 android:textColorHint="#AAAAAA"
                 android:inputType="textPassword"
                 android:backgroundTint="#555555"
-                android:layout_marginBottom="12dp" />
+                android:textSize="14sp"
+                android:layout_marginBottom="6dp" />
 
             <EditText
                 android:id="@+id/newPassword"
@@ -193,7 +114,8 @@
                 android:textColorHint="#AAAAAA"
                 android:inputType="textPassword"
                 android:backgroundTint="#555555"
-                android:layout_marginBottom="12dp" />
+                android:textSize="14sp"
+                android:layout_marginBottom="6dp" />
 
             <EditText
                 android:id="@+id/confirmPassword"
@@ -204,7 +126,19 @@
                 android:textColorHint="#AAAAAA"
                 android:inputType="textPassword"
                 android:backgroundTint="#555555"
-                android:layout_marginBottom="24dp" />
+                android:textSize="14sp"
+                android:layout_marginBottom="12dp" />
+
+            <Button
+                android:id="@+id/btnChangePassword"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:layout_gravity="end"
+                android:layout_marginBottom="24dp"
+                android:backgroundTint="@color/grey_400"
+                android:text="Change Password"
+                android:textColor="@color/white"
+                android:textSize="11sp" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -219,6 +153,7 @@
                 android:layout_height="wrap_content"
                 android:text="Sign Out"
                 android:textColor="@android:color/white"
+                android:textSize="16sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp" />
 
@@ -238,9 +173,10 @@
                 <Button
                     android:id="@+id/btnSignOut"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="28dp"
                     android:text="Sign Out"
                     android:textColor="#000000"
+                    android:textSize="11sp"
                     android:backgroundTint="#FFD600" />
             </LinearLayout>
 
@@ -249,6 +185,7 @@
                 android:layout_height="wrap_content"
                 android:text="Delete Account"
                 android:textColor="@android:color/white"
+                android:textSize="16sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp" />
 
@@ -262,9 +199,10 @@
             <Button
                 android:id="@+id/btnDeleteAccount"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="28dp"
                 android:text="Delete Account"
                 android:textColor="#FFFFFF"
+                android:textSize="11sp"
                 android:backgroundTint="#D32F2F" />
         </LinearLayout>
 

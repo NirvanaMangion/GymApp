@@ -1,47 +1,64 @@
 package com.nirvana.gymapp.fragments
 
+import android.content.Context
+import android.net.Uri
 import android.os.Bundle
-import android.view.*
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.StyleSpan
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.*
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.nirvana.gymapp.R
+import com.nirvana.gymapp.database.UserDatabase
 
 class SettingsFragment : Fragment() {
-
-    private lateinit var btnPersonal: Button
-    private lateinit var btnEmailPass: Button
-    private lateinit var personalLayout: LinearLayout
-    private lateinit var passwordLayout: LinearLayout
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         val view = inflater.inflate(R.layout.fragment_settings, container, false)
 
-        btnPersonal = view.findViewById(R.id.btnPersonal)
-        btnEmailPass = view.findViewById(R.id.btnEmailPass)
-        personalLayout = view.findViewById(R.id.personalLayout)
-        passwordLayout = view.findViewById(R.id.passwordLayout)
+        val db = UserDatabase(requireContext())
+        val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
+        val username = sharedPref.getString("loggedInUser", "user") ?: "user"
+        val (email, phone) = db.getUserDetails(username)
 
-        fun highlightActiveButton(active: Button, inactive: Button) {
-            active.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.grey_700))
-            active.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white))
+        val accountInfo = view.findViewById<TextView>(R.id.accountEmailOrPhone)
+        val accountUsername = view.findViewById<TextView>(R.id.accountUsername)
+        val profileImage = view.findViewById<ImageView>(R.id.profileImage)
 
-            inactive.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.grey_900))
-            inactive.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey_400))
+        // Load saved profile image if exists
+        val savedUri = db.getProfileImage(username)
+        if (!savedUri.isNullOrEmpty()) {
+            profileImage.setImageURI(Uri.parse(savedUri))
+        } else {
+            profileImage.setImageResource(R.drawable.profileicon)
         }
 
-        btnPersonal.setOnClickListener {
-            personalLayout.visibility = View.VISIBLE
-            passwordLayout.visibility = View.GONE
-            highlightActiveButton(btnPersonal, btnEmailPass)
+        // Make labels bold, but not the value
+        fun boldLabel(label: String, value: String): SpannableString {
+            val full = "$label $value"
+            val spannable = SpannableString(full)
+            spannable.setSpan(
+                StyleSpan(android.graphics.Typeface.BOLD),
+                0,
+                label.length + 1, // include space
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            return spannable
         }
 
-        btnEmailPass.setOnClickListener {
-            personalLayout.visibility = View.GONE
-            passwordLayout.visibility = View.VISIBLE
-            highlightActiveButton(btnEmailPass, btnPersonal)
+        accountUsername.text = boldLabel("Username:", username)
+
+        if (!email.isNullOrEmpty()) {
+            accountInfo.text = boldLabel("Email:", email)
+        } else if (!phone.isNullOrEmpty()) {
+            accountInfo.text = boldLabel("Phone:", phone)
+        } else {
+            accountInfo.text = "No contact set"
         }
 
         return view
