@@ -1,9 +1,11 @@
 package com.nirvana.gymapp.fragments
 
 import android.app.AlertDialog
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -17,7 +19,7 @@ import com.nirvana.gymapp.R
 import com.nirvana.gymapp.database.UserDatabase
 import com.nirvana.gymapp.activities.MainActivity
 import java.io.File
-import java.io.FileOutputStream
+import java.io.IOException
 
 class ProfileFragment : Fragment() {
 
@@ -35,26 +37,42 @@ class ProfileFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Gallery launcher
         galleryLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
-            if (result.resultCode == android.app.Activity.RESULT_OK && result.data?.data != null) {
-                imageUri = result.data?.data
-                profileImageView.setImageURI(imageUri)
-                db.updateProfileImage(userId, imageUri.toString()) // Save to DB
+            if (result.resultCode == android.app.Activity.RESULT_OK) {
+                val dataUri = result.data?.data
+                if (dataUri != null) {
+                    try {
+                        val bitmap = loadBitmapSafelyFromUri(dataUri)
+                        if (bitmap != null) {
+                            val savedUri = saveBitmapToGallery(bitmap)
+                            if (savedUri != null) {
+                                profileImageView.setImageBitmap(bitmap)
+                                db.updateProfileImage(userId, savedUri.toString())
+                            }
+                        } else {
+                            Toast.makeText(requireContext(), "Unsupported image format", Toast.LENGTH_SHORT).show()
+                        }
+                    } catch (e: Exception) {
+                        Log.e("ProfileFragment", "Error loading gallery image", e)
+                        Toast.makeText(requireContext(), "Error loading image", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         }
 
-        // Camera launcher with save logic
         cameraLauncher = registerForActivityResult(
             ActivityResultContracts.TakePicturePreview()
         ) { bitmap: Bitmap? ->
             bitmap?.let {
-                val savedUri = saveBitmapToInternalStorage(it)
-                if (savedUri != null) {
-                    profileImageView.setImageURI(savedUri)
-                    db.updateProfileImage(userId, savedUri.toString()) // Persist to DB
+                val uri = saveBitmapToGallery(it)
+                try {
+                    profileImageView.setImageBitmap(it)
+                    if (uri != null) db.updateProfileImage(userId, uri.toString())
+                } catch (e: Exception) {
+                    Log.e("ProfileFragment", "Failed to show image from camera", e)
+                    Toast.makeText(requireContext(), "Error showing camera image", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -64,37 +82,40 @@ class ProfileFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_profile, container, false)
-        db = UserDatabase(requireContext())
 
-        // Get logged-in username from SharedPreferences
+        db = UserDatabase(requireContext())
         val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
         userId = sharedPref.getString("loggedInUser", "Username") ?: "Username"
 
         profileImageView = view.findViewById(R.id.profileImageView)
         usernameTextView = view.findViewById(R.id.usernameTextView)
-        usernameTextView.text = userId
+        chart = view.findViewById(R.id.lineChart)
+        noDataText = view.findViewById(R.id.tvNoData)
 
-        // Load saved image URI from DB
-        val savedUri = db.getProfileImage(userId)
-        if (!savedUri.isNullOrEmpty()) {
-            profileImageView.setImageURI(Uri.parse(savedUri))
-        } else {
-            profileImageView.setImageResource(R.drawable.profileicon) // Default icon
-        }
-
-        profileImageView.setOnClickListener {
-            showImageSourceDialog()
-        }
-
-        // Chart UI setup
         val btnDuration = view.findViewById<Button>(R.id.btnDuration)
         val btnVolume = view.findViewById<Button>(R.id.btnVolume)
         val btnReps = view.findViewById<Button>(R.id.btnReps)
         val btnWorkoutHistory = view.findViewById<Button>(R.id.btnWorkoutHistory)
         val btnMeasures = view.findViewById<Button>(R.id.btnMeasures)
 
-        chart = view.findViewById(R.id.lineChart)
-        noDataText = view.findViewById(R.id.tvNoData)
+        usernameTextView.text = userId
+
+        val savedUri = db.getProfileImage(userId)
+        if (!savedUri.isNullOrEmpty()) {
+            try {
+                val bitmap = loadBitmapSafelyFromUri(Uri.parse(savedUri))
+                bitmap?.let { profileImageView.setImageBitmap(it) }
+            } catch (e: Exception) {
+                Log.e("ProfileFragment", "Error loading saved image", e)
+                profileImageView.setImageResource(R.drawable.profileicon)
+            }
+        } else {
+            profileImageView.setImageResource(R.drawable.profileicon)
+        }
+
+        profileImageView.setOnClickListener {
+            showImageSourceDialog()
+        }
 
         btnWorkoutHistory.setOnClickListener {
             (activity as? MainActivity)?.loadFragment(
@@ -114,10 +135,9 @@ class ProfileFragment : Fragment() {
             )
         }
 
-        val selectedColor = "#FFD600"
-        val defaultColor = "#333333"
-
         fun highlightSelected(selected: Button) {
+            val selectedColor = "#FFD600"
+            val defaultColor = "#333333"
             listOf(btnDuration, btnVolume, btnReps).forEach { button ->
                 if (button == selected) {
                     button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor(selectedColor)))
@@ -218,6 +238,71 @@ class ProfileFragment : Fragment() {
         return view
     }
 
+    private fun loadBitmapSafelyFromUri(uri: Uri): Bitmap? {
+        return try {
+            val options = BitmapFactory.Options().apply {
+                inJustDecodeBounds = true
+            }
+
+            requireContext().contentResolver.openInputStream(uri)?.use {
+                BitmapFactory.decodeStream(it, null, options)
+            }
+
+            val inputStream2 = requireContext().contentResolver.openInputStream(uri)
+            inputStream2?.use {
+                val decodeOptions = BitmapFactory.Options().apply {
+                    inSampleSize = calculateInSampleSize(options, 512, 512)
+                    inJustDecodeBounds = false
+                }
+                BitmapFactory.decodeStream(it, null, decodeOptions)
+            }
+        } catch (e: Exception) {
+            Log.e("ProfileFragment", "loadBitmapSafelyFromUri: ${e.message}", e)
+            null
+        }
+    }
+
+    private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
+        val (height: Int, width: Int) = options.outHeight to options.outWidth
+        var inSampleSize = 1
+
+        if (height > reqHeight || width > reqWidth) {
+            val halfHeight: Int = height / 2
+            val halfWidth: Int = width / 2
+            while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2
+            }
+        }
+        return inSampleSize
+    }
+
+    private fun saveBitmapToGallery(bitmap: Bitmap): Uri? {
+        val contentValues = ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, "profile_${System.currentTimeMillis()}.jpg")
+            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+            put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Strive")
+            put(MediaStore.Images.Media.IS_PENDING, 1)
+        }
+
+        val resolver = requireContext().contentResolver
+        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+        return try {
+            uri?.let {
+                resolver.openOutputStream(it)?.use { outputStream ->
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+                }
+                contentValues.clear()
+                contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
+                resolver.update(uri, contentValues, null, null)
+            }
+            uri
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
     private fun showImageSourceDialog() {
         val options = arrayOf("Choose from gallery", "Take a photo")
         AlertDialog.Builder(requireContext())
@@ -235,20 +320,5 @@ class ProfileFragment : Fragment() {
                 }
             }
             .show()
-    }
-
-    private fun saveBitmapToInternalStorage(bitmap: Bitmap): Uri? {
-        return try {
-            val filename = "profile_${System.currentTimeMillis()}.png"
-            val file = File(requireContext().filesDir, filename)
-            val stream = FileOutputStream(file)
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-            stream.flush()
-            stream.close()
-            Uri.fromFile(file)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
     }
 }

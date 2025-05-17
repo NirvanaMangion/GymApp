@@ -10,6 +10,13 @@ import androidx.fragment.app.Fragment
 import com.nirvana.gymapp.R
 import com.nirvana.gymapp.database.UserDatabase
 import com.nirvana.gymapp.activities.MainActivity
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import org.json.JSONObject
+import java.io.IOException
 
 class HomeFragment : Fragment() {
 
@@ -17,6 +24,7 @@ class HomeFragment : Fragment() {
     private lateinit var routineListContainer: LinearLayout
     private lateinit var noRoutineText: TextView
     private lateinit var rootLayout: View
+    private lateinit var quoteText: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -29,6 +37,7 @@ class HomeFragment : Fragment() {
         dropdownText = view.findViewById(R.id.myRoutineDropdown)
         routineListContainer = view.findViewById(R.id.routineListContainer)
         noRoutineText = view.findViewById(R.id.noRoutineText)
+        quoteText = view.findViewById(R.id.quoteText)
         val addRoutineBtn = view.findViewById<Button>(R.id.addRoutineBtn)
 
         val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
@@ -80,6 +89,42 @@ class HomeFragment : Fragment() {
         rootLayout.alpha = 0f
         rootLayout.visibility = View.VISIBLE
         rootLayout.animate().alpha(1f).setDuration(150).start()
+
+        fetchMotivationalQuote()
+    }
+
+    private fun fetchMotivationalQuote() {
+        val client = OkHttpClient()
+        val url = "http://api.forismatic.com/api/1.0/?method=getQuote&lang=en&format=json"
+
+        val request = Request.Builder().url(url).build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                activity?.runOnUiThread {
+                    quoteText.text = "Push yourself – no one else will."
+                }
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                try {
+                    val raw = response.body?.string()?.replace("\\\"", "\"")
+                    val json = JSONObject(raw ?: "")
+                    val quote = json.optString("quoteText", "Keep pushing forward.").trim()
+                    val author = json.optString("quoteAuthor", "").trim()
+                    val full = if (author.isNotEmpty()) "$quote\n\n– $author" else quote
+
+                    activity?.runOnUiThread {
+                        quoteText.text = full
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    activity?.runOnUiThread {
+                        quoteText.text = "Stay focused and never quit."
+                    }
+                }
+            }
+        })
     }
 
     private fun displaySavedRoutines(username: String) {

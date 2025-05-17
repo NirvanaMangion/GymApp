@@ -285,7 +285,10 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
 
     fun getRoutineExercises(username: String): List<Pair<String, String>> {
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT name, category FROM routine_exercises WHERE username = ?", arrayOf(username))
+        val cursor = db.rawQuery(
+            "SELECT name, category FROM routine_exercises WHERE username = ?",
+            arrayOf(username)
+        )
         val list = mutableListOf<Pair<String, String>>()
         while (cursor.moveToNext()) {
             val name = cursor.getString(0)
@@ -321,7 +324,10 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
 
     fun getAllSavedRoutines(username: String): List<Pair<Int, String>> {
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT id, name FROM saved_routines WHERE username = ? ORDER BY created_at DESC", arrayOf(username))
+        val cursor = db.rawQuery(
+            "SELECT id, name FROM saved_routines WHERE username = ? ORDER BY created_at DESC",
+            arrayOf(username)
+        )
         val routines = mutableListOf<Pair<Int, String>>()
         while (cursor.moveToNext()) {
             val id = cursor.getInt(0)
@@ -348,7 +354,12 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         return list
     }
 
-    fun insertCompletedRoutineV2(userId: String, routineName: String, startTime: Long, endTime: Long) {
+    fun insertCompletedRoutineV2(
+        userId: String,
+        routineName: String,
+        startTime: Long,
+        endTime: Long
+    ) {
         val db = writableDatabase
         val values = ContentValues().apply {
             put("user_id", userId)
@@ -357,7 +368,10 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
             put("end_time", endTime)
         }
         val result = db.insert("completed_routines_v2", null, values)
-        Log.d("DB_INSERT", "insertCompletedRoutineV2: start=$startTime, end=$endTime, rowId=$result")
+        Log.d(
+            "DB_INSERT",
+            "insertCompletedRoutineV2: start=$startTime, end=$endTime, rowId=$result"
+        )
     }
 
     fun getV2Durations(userId: String): Map<String, Int> {
@@ -475,5 +489,48 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
             put("timestamp", timestamp)
         }
         return db.insert("measurements", null, values) != -1L
+    }
+
+    fun deleteUserCompletely(username: String): Boolean {
+        val db = writableDatabase
+
+        // Delete associated progress photos from storage
+        val photoCursor = db.rawQuery(
+            "SELECT photo_path FROM progress_photos WHERE username = ?",
+            arrayOf(username)
+        )
+        while (photoCursor.moveToNext()) {
+            try {
+                val path = photoCursor.getString(0)
+                File(path).delete()
+            } catch (e: Exception) {
+                Log.e("UserDatabase", "Failed to delete photo: ${e.message}")
+            }
+        }
+        photoCursor.close()
+
+        // Delete from all tables
+        db.delete("progress_photos", "username = ?", arrayOf(username))
+        db.delete("measurements", "username = ?", arrayOf(username))
+        db.delete("routine_exercises", "username = ?", arrayOf(username))
+        db.delete("completed_routines_v2", "user_id = ?", arrayOf(username))
+
+        // Delete routines & items
+        val routineCursor = db.rawQuery(
+            "SELECT id FROM saved_routines WHERE username = ?",
+            arrayOf(username)
+        )
+        val routineIds = mutableListOf<Int>()
+        while (routineCursor.moveToNext()) {
+            routineIds.add(routineCursor.getInt(0))
+        }
+        routineCursor.close()
+        for (id in routineIds) {
+            db.delete("routine_exercise_items", "routine_id = ?", arrayOf(id.toString()))
+        }
+        db.delete("saved_routines", "username = ?", arrayOf(username))
+
+        // Finally, delete user
+        return db.delete("users", "username = ?", arrayOf(username)) > 0
     }
 }
