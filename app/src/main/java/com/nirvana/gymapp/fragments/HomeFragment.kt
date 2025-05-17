@@ -1,15 +1,17 @@
 package com.nirvana.gymapp.fragments
 
+import android.app.AlertDialog
+import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.*
 import android.widget.*
-import android.content.Context
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.nirvana.gymapp.R
-import com.nirvana.gymapp.database.UserDatabase
 import com.nirvana.gymapp.activities.MainActivity
+import com.nirvana.gymapp.database.UserDatabase
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -25,6 +27,7 @@ class HomeFragment : Fragment() {
     private lateinit var noRoutineText: TextView
     private lateinit var rootLayout: View
     private lateinit var quoteText: TextView
+    private lateinit var quoteBox: FrameLayout
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -38,6 +41,7 @@ class HomeFragment : Fragment() {
         routineListContainer = view.findViewById(R.id.routineListContainer)
         noRoutineText = view.findViewById(R.id.noRoutineText)
         quoteText = view.findViewById(R.id.quoteText)
+        quoteBox = view.findViewById(R.id.quoteBox)
         val addRoutineBtn = view.findViewById<Button>(R.id.addRoutineBtn)
 
         val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
@@ -141,41 +145,71 @@ class HomeFragment : Fragment() {
             routineListContainer.visibility = View.VISIBLE
 
             for ((id, name) in routines) {
-                val card = LinearLayout(requireContext()).apply {
-                    orientation = LinearLayout.VERTICAL
-                    setBackgroundColor(Color.parseColor("#E0E0E0"))
-                    setPadding(32, 24, 32, 24)
+                val card = FrameLayout(requireContext()).apply {
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
-                        280
+                        260
                     ).apply {
-                        setMargins(16, 0, 16, 32)
+                        setMargins(0, 0, 0, 40)
                     }
+                    background = ContextCompat.getDrawable(requireContext(), R.drawable.rounded_grey_background)
+
+                    // ⬅️ Make the entire card clickable here
+                    isClickable = true
+                    isFocusable = true
+                    setOnClickListener {
+                        val detailFragment = RoutineDetailFragment.newInstance(id, name)
+                        (activity as? MainActivity)?.loadFragment(
+                            fragment = detailFragment,
+                            title = name,
+                            showUpArrow = true,
+                            showBottomNav = false
+                        )
+                    }
+                }
+
+                val container = LinearLayout(requireContext()).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(32, 24, 32, 24)
+                    layoutParams = FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.MATCH_PARENT
+                    )
                     gravity = Gravity.CENTER
                 }
 
                 val title = TextView(requireContext()).apply {
                     text = name
                     textSize = 22f
-                    setTextColor(Color.parseColor("#212121"))
+                    setTextColor(Color.parseColor("#F5F5F5"))
                     typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                    alpha = 0.85f
                     gravity = Gravity.CENTER
                 }
 
-                card.setOnClickListener {
-                    val detailFragment = RoutineDetailFragment.newInstance(id, name)
-                    (activity as? MainActivity)?.loadFragment(
-                        fragment = detailFragment,
-                        title = name,
-                        showUpArrow = true,
-                        showBottomNav = false
-                    )
+                val binIcon = ImageView(requireContext()).apply {
+                    setImageResource(R.drawable.binicon)
+                    layoutParams = FrameLayout.LayoutParams(60, 60, Gravity.END or Gravity.BOTTOM).apply {
+                        setMargins(0, 0, 24, 24)
+                    }
+                    setOnClickListener {
+                        AlertDialog.Builder(requireContext())
+                            .setTitle("Delete Routine")
+                            .setMessage("Are you sure you want to delete this routine?")
+                            .setPositiveButton("Yes") { _, _ ->
+                                db.deleteRoutineById(id)
+                                displaySavedRoutines(username)
+                            }
+                            .setNegativeButton("No", null)
+                            .show()
+                    }
                 }
 
-                card.addView(title)
+                container.addView(title)
+                card.addView(container)
+                card.addView(binIcon)
                 routineListContainer.addView(card)
             }
+
         }
 
         dropdownText.text = "My Routine (${routines.size})"

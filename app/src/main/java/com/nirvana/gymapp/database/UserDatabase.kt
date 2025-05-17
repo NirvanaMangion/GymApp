@@ -533,4 +533,11 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         // Finally, delete user
         return db.delete("users", "username = ?", arrayOf(username)) > 0
     }
+
+    fun deleteRoutineById(routineId: Int): Boolean {
+        val db = writableDatabase
+        db.delete("routine_exercise_items", "routine_id = ?", arrayOf(routineId.toString()))
+        return db.delete("saved_routines", "id = ?", arrayOf(routineId.toString())) > 0
+    }
+
 }
