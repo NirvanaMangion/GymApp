@@ -1,5 +1,6 @@
 package com.nirvana.gymapp.fragments
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.Spannable
@@ -42,15 +43,34 @@ class EmailSignupFragment : Fragment() {
             val email = emailInput.text?.toString()?.trim() ?: ""
             val password = passwordInput.text?.toString()?.trim() ?: ""
 
+            val usernamePattern = Regex("^[a-z]+$") // lowercase letters only
+            val passwordPattern = Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{10,}\$")
+
+            val passwordRequirementsMsg = """
+                Password Requirements:
+                • At least 10 characters
+                • Include uppercase and lowercase letters
+                • Include a number
+                • Include a special character
+            """.trimIndent()
+
             when {
                 username.isEmpty() || email.isEmpty() || password.isEmpty() ->
                     toast("Please fill in all fields.")
 
+                !usernamePattern.matches(username) ->
+                    toast("Username must contain only lowercase letters with no spaces or symbols.")
+
                 !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() ->
                     toast("Please enter a valid email address.")
 
-                password.length < 6 || !password.any { it.isDigit() } || !password.any { it.isLetter() } ->
-                    toast("Password must be at least 6 characters, with letters and numbers.")
+                !passwordPattern.matches(password) -> {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Invalid Password")
+                        .setMessage(passwordRequirementsMsg)
+                        .setPositiveButton("OK", null)
+                        .show()
+                }
 
                 !termsCheckbox.isChecked ->
                     toast("You must accept the terms.")
@@ -59,26 +79,26 @@ class EmailSignupFragment : Fragment() {
                     toast("Username already exists.")
 
                 else -> {
-                    // Save the user
                     userDb.addUser(username, email, null, password)
                     toast("Account created!")
 
-                    // Save login session
                     val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
                     sharedPref.edit().putString("loggedInUser", username).apply()
 
-                    // Prepare the UnitSelectionFragment
-                    val fragment = UnitSelectionFragment()
+                    // Clear cached quote to refresh on next home load
+                    val quotePrefs = requireContext().getSharedPreferences("AppSessionPrefs", Context.MODE_PRIVATE)
+                    quotePrefs.edit().remove("cachedQuote").apply()
+
+                    val fragment = HomeFragment()
                     fragment.arguments = Bundle().apply {
                         putString("username", username)
                     }
 
-                    // 🚀 ACTUALLY LOAD THE UNIT SELECTION SCREEN
                     (activity as? MainActivity)?.loadFragment(
-                        fragment = fragment,
-                        title = "Choose Unit",
+                        fragment,
+                        title = "Home",
                         showUpArrow = false,
-                        showBottomNav = false
+                        showBottomNav = true
                     )
                 }
             }

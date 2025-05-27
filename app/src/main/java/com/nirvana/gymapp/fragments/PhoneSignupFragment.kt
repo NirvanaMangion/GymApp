@@ -1,5 +1,6 @@
 package com.nirvana.gymapp.fragments
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.Spannable
@@ -32,6 +33,9 @@ class PhoneSignupFragment : Fragment() {
         val termsCheckbox = view.findViewById<CheckBox>(R.id.termsCheckbox)
         val continueBtn = view.findViewById<Button>(R.id.continueBtn)
 
+        countryCodeInput.setText("+")
+        countryCodeInput.setSelection(countryCodeInput.text.length)
+
         title?.let {
             val styled = SpannableString("Strive")
             styled.setSpan(ForegroundColorSpan("#FFD600".toColorInt()), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -46,51 +50,65 @@ class PhoneSignupFragment : Fragment() {
 
             val fullPhone = "$code$phone"
 
+            val usernamePattern = Regex("^[a-z]+$") // lowercase letters only
+            val passwordPattern = Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{10,}\$")
+
+            val passwordRequirementsMsg = """
+                Password Requirements:
+                • At least 10 characters
+                • Include uppercase and lowercase letters
+                • Include a number
+                • Include a special character
+            """.trimIndent()
+
             when {
-                // Check if any field is empty
                 username.isEmpty() || code.isEmpty() || phone.isEmpty() || password.isEmpty() ->
                     toast("Please fill in all fields.")
 
-                // Check if country code is valid (starts with + and 1–4 digits)
+                !usernamePattern.matches(username) ->
+                    toast("Username must contain only lowercase letters with no spaces or symbols.")
+
                 !code.matches(Regex("^\\+\\d{1,4}\$")) ->
                     toast("Enter a valid country code, like +356, +1, or +44.")
 
-                // Check if phone number is valid (only digits, 7–15 digits)
                 !phone.matches(Regex("^\\d{7,15}\$")) ->
                     toast("Enter a valid phone number (7 to 15 digits, numbers only).")
 
-                // Check if password is strong enough
-                password.length < 6 || !password.any { it.isDigit() } || !password.any { it.isLetter() } ->
-                    toast("Password must be at least 6 characters with both letters and numbers.")
+                !passwordPattern.matches(password) -> {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Invalid Password")
+                        .setMessage(passwordRequirementsMsg)
+                        .setPositiveButton("OK", null)
+                        .show()
+                }
 
-                // Check if terms and conditions are accepted
                 !termsCheckbox.isChecked ->
                     toast("You must accept the terms.")
 
-                // Check if username already exists
                 userDb.checkUserExists(username) ->
                     toast("Username already exists.")
 
                 else -> {
-                    // Save user to database
                     userDb.addUser(username, null, fullPhone, password)
                     toast("Account created successfully!")
 
-                    // Save username in SharedPreferences
                     val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
                     sharedPref.edit().putString("loggedInUser", username).apply()
 
-                    // Move to UnitSelectionFragment
-                    val fragment = UnitSelectionFragment()
+                    // Clear cached quote to refresh on next home load
+                    val quotePrefs = requireContext().getSharedPreferences("AppSessionPrefs", Context.MODE_PRIVATE)
+                    quotePrefs.edit().remove("cachedQuote").apply()
+
+                    val fragment = HomeFragment()
                     fragment.arguments = Bundle().apply {
                         putString("username", username)
                     }
 
                     (activity as? MainActivity)?.loadFragment(
                         fragment,
-                        title = "Choose Unit",
+                        title = "Home",
                         showUpArrow = false,
-                        showBottomNav = false
+                        showBottomNav = true
                     )
                 }
             }

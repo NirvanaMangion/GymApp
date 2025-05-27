@@ -12,11 +12,7 @@ import androidx.fragment.app.Fragment
 import com.nirvana.gymapp.R
 import com.nirvana.gymapp.activities.MainActivity
 import com.nirvana.gymapp.database.UserDatabase
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
+import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
 
@@ -29,13 +25,18 @@ class HomeFragment : Fragment() {
     private lateinit var quoteText: TextView
     private lateinit var quoteBox: FrameLayout
 
+    private var cachedRoutines: List<Pair<Int, String>> = emptyList()
+
+    private val PREFS_NAME = "AppSessionPrefs"
+    private val KEY_QUOTE = "cachedQuote"
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
 
         rootLayout = view.findViewById(R.id.homeRootLayout)
-        rootLayout.visibility = View.INVISIBLE
+        rootLayout.visibility = View.VISIBLE
 
         dropdownText = view.findViewById(R.id.myRoutineDropdown)
         routineListContainer = view.findViewById(R.id.routineListContainer)
@@ -55,7 +56,7 @@ class HomeFragment : Fragment() {
                 AddRoutineFragment(),
                 title = "Add Routine",
                 showUpArrow = true,
-                showBottomNav = false
+                showBottomNav = true
             )
         }
 
@@ -79,61 +80,45 @@ class HomeFragment : Fragment() {
         val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
         val username = sharedPref.getString("loggedInUser", "guest") ?: "guest"
 
-        displaySavedRoutines(username)
+        var routinesDone = false
+        var quoteDone = false
 
-        val hasRoutines = UserDatabase(requireContext()).getAllSavedRoutines(username).isNotEmpty()
-        routineListContainer.visibility = if (hasRoutines) View.VISIBLE else View.GONE
-        noRoutineText.visibility = if (hasRoutines) View.GONE else View.VISIBLE
-        dropdownText.setCompoundDrawablesWithIntrinsicBounds(
-            0, 0,
-            if (hasRoutines) R.drawable.down_arrow else R.drawable.right_arrow,
-            0
-        )
+        fun tryShowUI() {
+            if (routinesDone && quoteDone) {
+                // UI already visible, nothing extra needed
+            }
+        }
 
-        rootLayout.alpha = 0f
-        rootLayout.visibility = View.VISIBLE
-        rootLayout.animate().alpha(1f).setDuration(150).start()
+        displaySavedRoutines(username) {
+            routinesDone = true
+            tryShowUI()
+        }
 
-        fetchMotivationalQuote()
+        fetchMotivationalQuote {
+            quoteDone = true
+            tryShowUI()
+        }
     }
 
-    private fun fetchMotivationalQuote() {
-        val client = OkHttpClient()
-        val url = "http://api.forismatic.com/api/1.0/?method=getQuote&lang=en&format=json"
-
-        val request = Request.Builder().url(url).build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                activity?.runOnUiThread {
-                    quoteText.text = "Push yourself – no one else will."
-                }
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                try {
-                    val raw = response.body?.string()?.replace("\\\"", "\"")
-                    val json = JSONObject(raw ?: "")
-                    val quote = json.optString("quoteText", "Keep pushing forward.").trim()
-                    val author = json.optString("quoteAuthor", "").trim()
-                    val full = if (author.isNotEmpty()) "$quote\n\n– $author" else quote
-
-                    activity?.runOnUiThread {
-                        quoteText.text = full
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    activity?.runOnUiThread {
-                        quoteText.text = "Stay focused and never quit."
-                    }
-                }
-            }
-        })
+    private fun getCachedQuote(): String? {
+        val sharedPref = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return sharedPref.getString(KEY_QUOTE, null)
     }
 
-    private fun displaySavedRoutines(username: String) {
+    private fun cacheQuote(quote: String) {
+        val sharedPref = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        sharedPref.edit().putString(KEY_QUOTE, quote).apply()
+    }
+
+    private fun displaySavedRoutines(username: String, onComplete: () -> Unit) {
         val db = UserDatabase(requireContext())
         val routines = db.getAllSavedRoutines(username)
+
+        if (routines == cachedRoutines) {
+            onComplete()
+            return
+        }
+        cachedRoutines = routines
 
         routineListContainer.removeAllViews()
 
@@ -154,7 +139,6 @@ class HomeFragment : Fragment() {
                     }
                     background = ContextCompat.getDrawable(requireContext(), R.drawable.rounded_grey_background)
 
-                    // ⬅️ Make the entire card clickable here
                     isClickable = true
                     isFocusable = true
                     setOnClickListener {
@@ -182,7 +166,7 @@ class HomeFragment : Fragment() {
                     text = name
                     textSize = 22f
                     setTextColor(Color.parseColor("#F5F5F5"))
-                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                    typeface = Typeface.DEFAULT_BOLD
                     gravity = Gravity.CENTER
                 }
 
@@ -197,7 +181,7 @@ class HomeFragment : Fragment() {
                             .setMessage("Are you sure you want to delete this routine?")
                             .setPositiveButton("Yes") { _, _ ->
                                 db.deleteRoutineById(id)
-                                displaySavedRoutines(username)
+                                displaySavedRoutines(username) { /* no need callback here */ }
                             }
                             .setNegativeButton("No", null)
                             .show()
@@ -209,9 +193,59 @@ class HomeFragment : Fragment() {
                 card.addView(binIcon)
                 routineListContainer.addView(card)
             }
-
         }
 
         dropdownText.text = "My Routine (${routines.size})"
+
+        onComplete()
+    }
+
+    private fun fetchMotivationalQuote(onComplete: () -> Unit) {
+        val cached = getCachedQuote()
+        if (cached != null) {
+            quoteText.text = cached
+            onComplete()
+            return
+        }
+
+        val client = OkHttpClient()
+        val url = "http://api.forismatic.com/api/1.0/?method=getQuote&lang=en&format=json"
+
+        val request = Request.Builder().url(url).build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                activity?.runOnUiThread {
+                    val fallback = "Push yourself – no one else will."
+                    quoteText.text = fallback
+                    cacheQuote(fallback)
+                    onComplete()
+                }
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                try {
+                    val raw = response.body?.string()?.replace("\\\"", "\"")
+                    val json = JSONObject(raw ?: "")
+                    val quote = json.optString("quoteText", "Keep pushing forward.").trim()
+                    val author = json.optString("quoteAuthor", "").trim()
+                    val full = if (author.isNotEmpty()) "$quote\n\n– $author" else quote
+
+                    activity?.runOnUiThread {
+                        quoteText.text = full
+                        cacheQuote(full)
+                        onComplete()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    activity?.runOnUiThread {
+                        val fallback = "Stay focused and never quit."
+                        quoteText.text = fallback
+                        cacheQuote(fallback)
+                        onComplete()
+                    }
+                }
+            }
+        })
     }
 }

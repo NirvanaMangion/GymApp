@@ -41,13 +41,13 @@ class MainActivity : AppCompatActivity() {
 
         if (savedInstanceState == null) {
             when (intent.getStringExtra("start")) {
-                "email" -> loadFragment(EmailSignupFragment(), "Sign up", true, false)
-                "phone" -> loadFragment(PhoneSignupFragment(), "Sign up", true, false)
-                "unit" -> loadFragment(UnitSelectionFragment(), "Choose Unit", false, false)
-                "login" -> loadFragment(LoginFragment(), "Log In", true, false)
-                else -> loadFragment(HomeFragment(), "Home", false, true)
+                "email" -> loadFragment(EmailSignupFragment(), "Sign up", true, false, false)
+                "phone" -> loadFragment(PhoneSignupFragment(), "Sign up", true, false, false)
+                "login" -> loadFragment(LoginFragment(), "Log In", true, false, false)
+                else -> loadFragment(HomeFragment(), "Home", false, true, false)
             }
         }
+
 
         findViewById<View>(R.id.navHome).setOnClickListener {
             loadFragment(HomeFragment(), "Home", false, true)
@@ -66,21 +66,24 @@ class MainActivity : AppCompatActivity() {
         fragment: Fragment,
         title: String,
         showUpArrow: Boolean,
-        showBottomNav: Boolean
+        showBottomNav: Boolean,
+        addToBackStack: Boolean = true // add default here so old calls still work
     ) {
-        supportFragmentManager.beginTransaction()
+        val transaction = supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, fragment)
-            .addToBackStack(null)
-            .commit()
 
-        // Delay UI updates until the fragment is attached
+        if (addToBackStack) {
+            transaction.addToBackStack(null)
+        }
+
+        transaction.commit()
         supportFragmentManager.executePendingTransactions()
 
-        // Then update toolbar and bottom nav
         titleText.text = title
         customBack.visibility = if (showUpArrow) View.VISIBLE else View.GONE
         bottomNav.visibility = if (showBottomNav) View.VISIBLE else View.GONE
     }
+
 
 
     override fun onBackPressed() {
