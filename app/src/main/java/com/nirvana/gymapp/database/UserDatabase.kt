@@ -22,8 +22,8 @@ data class MeasurementEntry(
 class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", null, 8) {
 
     override fun onCreate(db: SQLiteDatabase) {
-        db.execSQL(
-            """
+        // User info table
+        db.execSQL("""
             CREATE TABLE users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT NOT NULL UNIQUE,
@@ -35,11 +35,10 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
                 measurementUnit TEXT,
                 profileImageUri TEXT
             );
-        """
-        )
+        """)
 
-        db.execSQL(
-            """
+        // Temporary routine builder table
+        db.execSQL("""
             CREATE TABLE routine_exercises (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT,
@@ -49,22 +48,20 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
                 reps INTEGER DEFAULT 0,
                 weight REAL DEFAULT 0
             );
-        """
-        )
+        """)
 
-        db.execSQL(
-            """
+        // Saved routines table
+        db.execSQL("""
             CREATE TABLE saved_routines (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT,
                 name TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
-        """
-        )
+        """)
 
-        db.execSQL(
-            """
+        // Exercises linked to saved routines
+        db.execSQL("""
             CREATE TABLE routine_exercise_items (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 routine_id INTEGER,
@@ -72,11 +69,10 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
                 category TEXT,
                 FOREIGN KEY (routine_id) REFERENCES saved_routines(id)
             );
-        """
-        )
+        """)
 
-        db.execSQL(
-            """
+        // Completed routine sessions
+        db.execSQL("""
             CREATE TABLE IF NOT EXISTS completed_routines_v2 (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id TEXT NOT NULL,
@@ -84,11 +80,10 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
                 start_time INTEGER,
                 end_time INTEGER
             );
-        """
-        )
+        """)
 
-        db.execSQL(
-            """
+        // Body measurements
+        db.execSQL("""
             CREATE TABLE IF NOT EXISTS measurements (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT NOT NULL,
@@ -98,36 +93,34 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
                 arms TEXT,
                 timestamp TEXT
             );
-        """
-        )
+        """)
 
-        db.execSQL(
-            """
+        // Progress photo paths
+        db.execSQL("""
             CREATE TABLE IF NOT EXISTS progress_photos (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT NOT NULL,
                 timestamp TEXT NOT NULL,
                 photo_path TEXT NOT NULL
             );
-        """
-        )
+        """)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        // Add photos table if updating from older version
         if (oldVersion < 8) {
-            db.execSQL(
-                """
+            db.execSQL("""
                 CREATE TABLE IF NOT EXISTS progress_photos (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT NOT NULL,
                     timestamp TEXT NOT NULL,
                     photo_path TEXT NOT NULL
                 );
-            """
-            )
+            """)
         }
     }
 
+    // Insert new photo record
     fun insertProgressPhoto(username: String, timestamp: String, photoPath: String): Boolean {
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -138,6 +131,7 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         return db.insert("progress_photos", null, values) != -1L
     }
 
+    // Get all photos for a measurement entry
     fun getPhotosForMeasurement(username: String, timestamp: String): List<String> {
         val db = readableDatabase
         val cursor = db.rawQuery(
@@ -152,6 +146,7 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         return paths
     }
 
+    // Delete measurement and its associated photos
     fun deleteMeasurement(username: String, timestamp: String) {
         val db = writableDatabase
         val photoPaths = getPhotosForMeasurement(username, timestamp)
@@ -166,6 +161,7 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         db.delete("measurements", "username = ? AND timestamp = ?", arrayOf(username, timestamp))
     }
 
+    // Get all measurements for user
     fun getMeasurementsForUser(username: String): List<MeasurementEntry> {
         val list = mutableListOf<MeasurementEntry>()
         val db = readableDatabase
@@ -185,6 +181,7 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         return list
     }
 
+    // Save bitmap to internal storage
     fun savePhotoToStorage(context: Context, bitmap: Bitmap, filename: String): String {
         val file = File(context.filesDir, filename)
         FileOutputStream(file).use { out ->
@@ -193,6 +190,7 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         return file.absolutePath
     }
 
+    // Add new user
     fun addUser(username: String, email: String?, phone: String?, password: String): Boolean {
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -204,6 +202,7 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         return db.insert("users", null, values) != -1L
     }
 
+    // Get user's password
     fun getPasswordForUser(username: String): String? {
         val db = readableDatabase
         val cursor = db.rawQuery("SELECT password FROM users WHERE username = ?", arrayOf(username))
@@ -215,6 +214,7 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         return password
     }
 
+    // Update user's password
     fun updateUserPassword(username: String, newPassword: String): Boolean {
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -223,7 +223,7 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         return db.update("users", values, "username = ?", arrayOf(username)) > 0
     }
 
-
+    // Check if user exists
     fun checkUserExists(username: String): Boolean {
         val db = readableDatabase
         val cursor = db.rawQuery("SELECT * FROM users WHERE username = ?", arrayOf(username))
@@ -232,6 +232,7 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         return exists
     }
 
+    // Check credentials match
     fun validateCredentials(username: String, password: String): Boolean {
         val db = readableDatabase
         val cursor = db.rawQuery(
@@ -243,6 +244,7 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         return valid
     }
 
+    // Get email and phone
     fun getUserDetails(username: String): Pair<String?, String?> {
         val db = readableDatabase
         val cursor = db.rawQuery(
@@ -259,7 +261,7 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         return Pair(email, phone)
     }
 
-
+    // Update units (weight, distance, measurement)
     fun setUserUnits(username: String, weight: String, distance: String, measure: String): Boolean {
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -270,6 +272,7 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         return db.update("users", values, "username = ?", arrayOf(username)) > 0
     }
 
+    // Add exercise to temp routine
     fun addExerciseToRoutine(username: String, name: String, category: String) {
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -283,6 +286,7 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         db.insert("routine_exercises", null, values)
     }
 
+    // Get temp routine exercises
     fun getRoutineExercises(username: String): List<Pair<String, String>> {
         val db = readableDatabase
         val cursor = db.rawQuery(
@@ -291,18 +295,18 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         )
         val list = mutableListOf<Pair<String, String>>()
         while (cursor.moveToNext()) {
-            val name = cursor.getString(0)
-            val category = cursor.getString(1)
-            list.add(name to category)
+            list.add(cursor.getString(0) to cursor.getString(1))
         }
         cursor.close()
         return list
     }
 
+    // Clear temp routine
     fun clearRoutineExercises(username: String) {
         writableDatabase.delete("routine_exercises", "username = ?", arrayOf(username))
     }
 
+    // Save routine to permanent table
     fun saveRoutine(username: String, name: String) {
         val db = writableDatabase
         val routineValues = ContentValues().apply {
@@ -322,6 +326,7 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         }
     }
 
+    // Get saved routines
     fun getAllSavedRoutines(username: String): List<Pair<Int, String>> {
         val db = readableDatabase
         val cursor = db.rawQuery(
@@ -330,14 +335,13 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         )
         val routines = mutableListOf<Pair<Int, String>>()
         while (cursor.moveToNext()) {
-            val id = cursor.getInt(0)
-            val name = cursor.getString(1)
-            routines.add(id to name)
+            routines.add(cursor.getInt(0) to cursor.getString(1))
         }
         cursor.close()
         return routines
     }
 
+    // Get exercises for a specific saved routine
     fun getExercisesForRoutine(routineId: Int): List<Pair<String, String>> {
         val db = readableDatabase
         val cursor = db.rawQuery(
@@ -346,20 +350,14 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         )
         val list = mutableListOf<Pair<String, String>>()
         while (cursor.moveToNext()) {
-            val name = cursor.getString(0)
-            val category = cursor.getString(1)
-            list.add(name to category)
+            list.add(cursor.getString(0) to cursor.getString(1))
         }
         cursor.close()
         return list
     }
 
-    fun insertCompletedRoutineV2(
-        userId: String,
-        routineName: String,
-        startTime: Long,
-        endTime: Long
-    ) {
+    // Insert completed workout session
+    fun insertCompletedRoutineV2(userId: String, routineName: String, startTime: Long, endTime: Long) {
         val db = writableDatabase
         val values = ContentValues().apply {
             put("user_id", userId)
@@ -367,13 +365,10 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
             put("start_time", startTime)
             put("end_time", endTime)
         }
-        val result = db.insert("completed_routines_v2", null, values)
-        Log.d(
-            "DB_INSERT",
-            "insertCompletedRoutineV2: start=$startTime, end=$endTime, rowId=$result"
-        )
+        db.insert("completed_routines_v2", null, values)
     }
 
+    // Get workout durations per day
     fun getV2Durations(userId: String): Map<String, Int> {
         val db = readableDatabase
         val cursor = db.rawQuery(
@@ -392,33 +387,28 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         return result
     }
 
+    // Estimate volume per day
     fun getDailyVolumes(userId: String): Map<String, Int> {
         val rawDurations = getV2Durations(userId)
         return rawDurations.mapValues { it.value * 50 }
     }
 
+    // Estimate reps per day
     fun getDailyReps(userId: String): Map<String, Int> {
         val rawDurations = getV2Durations(userId)
         return rawDurations.mapValues { it.value * 2 }
     }
 
-    data class RoutineLog(
-        val routineName: String,
-        val startTime: Long,
-        val duration: Int,
-        val volume: Int,
-        val reps: Int
-    )
+    data class RoutineLog(val routineName: String, val startTime: Long, val duration: Int, val volume: Int, val reps: Int)
 
+    // Get all routine logs
     fun getAllCompletedRoutines(userId: String): List<RoutineLog> {
         val db = readableDatabase
         val result = mutableListOf<RoutineLog>()
-
         val cursor = db.rawQuery(
             "SELECT routine_name, start_time, end_time FROM completed_routines_v2 WHERE user_id = ? ORDER BY start_time DESC",
             arrayOf(userId)
         )
-
         while (cursor.moveToNext()) {
             val name = cursor.getString(0)
             val start = cursor.getLong(1)
@@ -432,6 +422,7 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         return result
     }
 
+    // Get all workout sessions as Triples
     fun getWorkoutHistoryLogs(userId: String): List<Triple<String, Long, Long>> {
         val db = readableDatabase
         val result = mutableListOf<Triple<String, Long, Long>>()
@@ -440,15 +431,13 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
             arrayOf(userId)
         )
         while (cursor.moveToNext()) {
-            val name = cursor.getString(0)
-            val start = cursor.getLong(1)
-            val end = cursor.getLong(2)
-            result.add(Triple(name, start, end))
+            result.add(Triple(cursor.getString(0), cursor.getLong(1), cursor.getLong(2)))
         }
         cursor.close()
         return result
     }
 
+    // Update user's profile image
     fun updateProfileImage(username: String, imageUri: String): Boolean {
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -457,28 +446,18 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         return db.update("users", values, "username = ?", arrayOf(username)) > 0
     }
 
+    // Get user's profile image
     fun getProfileImage(username: String): String? {
         val db = readableDatabase
-        val cursor = db.rawQuery(
-            "SELECT profileImageUri FROM users WHERE username = ?",
-            arrayOf(username)
-        )
+        val cursor = db.rawQuery("SELECT profileImageUri FROM users WHERE username = ?", arrayOf(username))
         var result: String? = null
-        if (cursor.moveToFirst()) {
-            result = cursor.getString(0)
-        }
+        if (cursor.moveToFirst()) result = cursor.getString(0)
         cursor.close()
         return result
     }
 
-    fun insertMeasurement(
-        username: String,
-        weight: String,
-        chest: String,
-        waist: String,
-        arms: String,
-        timestamp: String
-    ): Boolean {
+    // Insert new measurement entry
+    fun insertMeasurement(username: String, weight: String, chest: String, waist: String, arms: String, timestamp: String): Boolean {
         val db = writableDatabase
         val values = ContentValues().apply {
             put("username", username)
@@ -491,53 +470,47 @@ class UserDatabase(context: Context) : SQLiteOpenHelper(context, "users.db", nul
         return db.insert("measurements", null, values) != -1L
     }
 
+    // Delete user and all related data
     fun deleteUserCompletely(username: String): Boolean {
         val db = writableDatabase
 
-        // Delete associated progress photos from storage
-        val photoCursor = db.rawQuery(
-            "SELECT photo_path FROM progress_photos WHERE username = ?",
-            arrayOf(username)
-        )
+        // Delete user's progress photos
+        val photoCursor = db.rawQuery("SELECT photo_path FROM progress_photos WHERE username = ?", arrayOf(username))
         while (photoCursor.moveToNext()) {
             try {
-                val path = photoCursor.getString(0)
-                File(path).delete()
+                File(photoCursor.getString(0)).delete()
             } catch (e: Exception) {
                 Log.e("UserDatabase", "Failed to delete photo: ${e.message}")
             }
         }
         photoCursor.close()
 
-        // Delete from all tables
+        // Delete user-related data from all tables
         db.delete("progress_photos", "username = ?", arrayOf(username))
         db.delete("measurements", "username = ?", arrayOf(username))
         db.delete("routine_exercises", "username = ?", arrayOf(username))
         db.delete("completed_routines_v2", "user_id = ?", arrayOf(username))
 
-        // Delete routines & items
-        val routineCursor = db.rawQuery(
-            "SELECT id FROM saved_routines WHERE username = ?",
-            arrayOf(username)
-        )
+        val routineCursor = db.rawQuery("SELECT id FROM saved_routines WHERE username = ?", arrayOf(username))
         val routineIds = mutableListOf<Int>()
         while (routineCursor.moveToNext()) {
             routineIds.add(routineCursor.getInt(0))
         }
         routineCursor.close()
+
         for (id in routineIds) {
             db.delete("routine_exercise_items", "routine_id = ?", arrayOf(id.toString()))
         }
         db.delete("saved_routines", "username = ?", arrayOf(username))
 
-        // Finally, delete user
+        // Delete the user
         return db.delete("users", "username = ?", arrayOf(username)) > 0
     }
 
+    // Delete a saved routine by its ID
     fun deleteRoutineById(routineId: Int): Boolean {
         val db = writableDatabase
         db.delete("routine_exercise_items", "routine_id = ?", arrayOf(routineId.toString()))
         return db.delete("saved_routines", "id = ?", arrayOf(routineId.toString())) > 0
     }
-
 }

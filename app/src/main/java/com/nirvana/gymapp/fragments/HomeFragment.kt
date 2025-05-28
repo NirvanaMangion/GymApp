@@ -12,9 +12,6 @@ import androidx.fragment.app.Fragment
 import com.nirvana.gymapp.R
 import com.nirvana.gymapp.activities.MainActivity
 import com.nirvana.gymapp.database.UserDatabase
-import okhttp3.*
-import org.json.JSONObject
-import java.io.IOException
 
 class HomeFragment : Fragment() {
 
@@ -27,17 +24,13 @@ class HomeFragment : Fragment() {
 
     private var cachedRoutines: List<Pair<Int, String>> = emptyList()
 
-    private val PREFS_NAME = "AppSessionPrefs"
-    private val KEY_QUOTE = "cachedQuote"
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
 
+        // Bind UI elements
         rootLayout = view.findViewById(R.id.homeRootLayout)
-        rootLayout.visibility = View.VISIBLE
-
         dropdownText = view.findViewById(R.id.myRoutineDropdown)
         routineListContainer = view.findViewById(R.id.routineListContainer)
         noRoutineText = view.findViewById(R.id.noRoutineText)
@@ -45,9 +38,11 @@ class HomeFragment : Fragment() {
         quoteBox = view.findViewById(R.id.quoteBox)
         val addRoutineBtn = view.findViewById<Button>(R.id.addRoutineBtn)
 
+        // Get current username
         val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
         val username = sharedPref.getString("loggedInUser", "guest") ?: "guest"
 
+        // Clear temp routine builder and navigate to AddRoutineFragment
         addRoutineBtn.setOnClickListener {
             val userDb = UserDatabase(requireContext())
             userDb.clearRoutineExercises(username)
@@ -60,76 +55,41 @@ class HomeFragment : Fragment() {
             )
         }
 
-        dropdownText.setOnClickListener {
-            val isVisible = routineListContainer.visibility == View.VISIBLE
-            routineListContainer.visibility = if (isVisible) View.GONE else View.VISIBLE
-
-            val hasRoutines = UserDatabase(requireContext()).getAllSavedRoutines(username).isNotEmpty()
-            noRoutineText.visibility = if (!isVisible && !hasRoutines) View.VISIBLE else View.GONE
-
-            val arrowRes = if (isVisible) R.drawable.right_arrow else R.drawable.down_arrow
-            dropdownText.setCompoundDrawablesWithIntrinsicBounds(0, 0, arrowRes, 0)
-        }
-
         return view
     }
 
     override fun onResume() {
         super.onResume()
 
+        // Refresh quote and routines on return
         val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
         val username = sharedPref.getString("loggedInUser", "guest") ?: "guest"
 
-        var routinesDone = false
-        var quoteDone = false
+        val quotePrefs = requireContext().getSharedPreferences("AppSessionPrefs", Context.MODE_PRIVATE)
+        quoteText.text = quotePrefs.getString("cachedQuote", "Stay motivated!")
 
-        fun tryShowUI() {
-            if (routinesDone && quoteDone) {
-                // UI already visible, nothing extra needed
-            }
-        }
-
-        displaySavedRoutines(username) {
-            routinesDone = true
-            tryShowUI()
-        }
-
-        fetchMotivationalQuote {
-            quoteDone = true
-            tryShowUI()
-        }
+        displaySavedRoutines(username) {}
     }
 
-    private fun getCachedQuote(): String? {
-        val sharedPref = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        return sharedPref.getString(KEY_QUOTE, null)
-    }
-
-    private fun cacheQuote(quote: String) {
-        val sharedPref = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        sharedPref.edit().putString(KEY_QUOTE, quote).apply()
-    }
-
+    // Load and display user's saved routines
     private fun displaySavedRoutines(username: String, onComplete: () -> Unit) {
         val db = UserDatabase(requireContext())
         val routines = db.getAllSavedRoutines(username)
-
-        if (routines == cachedRoutines) {
-            onComplete()
-            return
-        }
         cachedRoutines = routines
 
         routineListContainer.removeAllViews()
 
         if (routines.isEmpty()) {
-            noRoutineText.visibility = View.VISIBLE
+            // Show "no routines" message if none
             routineListContainer.visibility = View.GONE
+            noRoutineText.visibility = View.VISIBLE
         } else {
-            noRoutineText.visibility = View.GONE
+            // Show routine cards
             routineListContainer.visibility = View.VISIBLE
+            noRoutineText.visibility = View.GONE
 
             for ((id, name) in routines) {
+                // Create card container
                 val card = FrameLayout(requireContext()).apply {
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
@@ -138,10 +98,10 @@ class HomeFragment : Fragment() {
                         setMargins(0, 0, 0, 40)
                     }
                     background = ContextCompat.getDrawable(requireContext(), R.drawable.rounded_grey_background)
-
                     isClickable = true
                     isFocusable = true
                     setOnClickListener {
+                        // Navigate to RoutineDetailFragment on card click
                         val detailFragment = RoutineDetailFragment.newInstance(id, name)
                         (activity as? MainActivity)?.loadFragment(
                             fragment = detailFragment,
@@ -152,6 +112,7 @@ class HomeFragment : Fragment() {
                     }
                 }
 
+                // Inner layout for routine title
                 val container = LinearLayout(requireContext()).apply {
                     orientation = LinearLayout.VERTICAL
                     setPadding(32, 24, 32, 24)
@@ -162,6 +123,7 @@ class HomeFragment : Fragment() {
                     gravity = Gravity.CENTER
                 }
 
+                // Routine title text
                 val title = TextView(requireContext()).apply {
                     text = name
                     textSize = 22f
@@ -170,24 +132,27 @@ class HomeFragment : Fragment() {
                     gravity = Gravity.CENTER
                 }
 
+                // Delete (bin) icon
                 val binIcon = ImageView(requireContext()).apply {
                     setImageResource(R.drawable.binicon)
                     layoutParams = FrameLayout.LayoutParams(60, 60, Gravity.END or Gravity.BOTTOM).apply {
                         setMargins(0, 0, 24, 24)
                     }
                     setOnClickListener {
+                        // Show confirmation dialog before deletion
                         AlertDialog.Builder(requireContext())
                             .setTitle("Delete Routine")
                             .setMessage("Are you sure you want to delete this routine?")
                             .setPositiveButton("Yes") { _, _ ->
                                 db.deleteRoutineById(id)
-                                displaySavedRoutines(username) { /* no need callback here */ }
+                                displaySavedRoutines(username) {} // Refresh list
                             }
                             .setNegativeButton("No", null)
                             .show()
                     }
                 }
 
+                // Add views to layout
                 container.addView(title)
                 card.addView(container)
                 card.addView(binIcon)
@@ -195,57 +160,9 @@ class HomeFragment : Fragment() {
             }
         }
 
+        // Update dropdown header with routine count
         dropdownText.text = "My Routine (${routines.size})"
 
         onComplete()
-    }
-
-    private fun fetchMotivationalQuote(onComplete: () -> Unit) {
-        val cached = getCachedQuote()
-        if (cached != null) {
-            quoteText.text = cached
-            onComplete()
-            return
-        }
-
-        val client = OkHttpClient()
-        val url = "http://api.forismatic.com/api/1.0/?method=getQuote&lang=en&format=json"
-
-        val request = Request.Builder().url(url).build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                activity?.runOnUiThread {
-                    val fallback = "Push yourself – no one else will."
-                    quoteText.text = fallback
-                    cacheQuote(fallback)
-                    onComplete()
-                }
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                try {
-                    val raw = response.body?.string()?.replace("\\\"", "\"")
-                    val json = JSONObject(raw ?: "")
-                    val quote = json.optString("quoteText", "Keep pushing forward.").trim()
-                    val author = json.optString("quoteAuthor", "").trim()
-                    val full = if (author.isNotEmpty()) "$quote\n\n– $author" else quote
-
-                    activity?.runOnUiThread {
-                        quoteText.text = full
-                        cacheQuote(full)
-                        onComplete()
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    activity?.runOnUiThread {
-                        val fallback = "Stay focused and never quit."
-                        quoteText.text = fallback
-                        cacheQuote(fallback)
-                        onComplete()
-                    }
-                }
-            }
-        })
     }
 }

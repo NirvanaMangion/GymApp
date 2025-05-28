@@ -19,9 +19,10 @@ import com.nirvana.gymapp.database.UserDatabase
 class RoutineDetailFragment : Fragment() {
 
     companion object {
-        private const val ARG_ROUTINE_ID = "routine_id"
-        private const val ARG_ROUTINE_NAME = "routine_name"
+        private const val ARG_ROUTINE_ID = "routine_id" // Key for routine ID in arguments
+        private const val ARG_ROUTINE_NAME = "routine_name" // Key for routine name in arguments
 
+        // Factory method to create a new instance of this fragment
         fun newInstance(id: Int, name: String): RoutineDetailFragment {
             val fragment = RoutineDetailFragment()
             val args = Bundle()
@@ -32,25 +33,25 @@ class RoutineDetailFragment : Fragment() {
         }
     }
 
-    private var routineId: Int = -1
+    private var routineId: Int = -1 // Routine ID passed in arguments
     private var routineName: String? = null
     private lateinit var containerLayout: LinearLayout
     private lateinit var timerTextView: TextView
-    private lateinit var topButton: Button
-    private lateinit var completeButton: Button
+    private lateinit var topButton: Button // Start/Pause/Resume button
+    private lateinit var completeButton: Button // Button to complete routine
 
     private var secondsElapsed = 0
     private var isPaused = false
-    private var routineStartTime: Long = 0L
+    private var routineStartTime: Long = 0L // Start timestamp for the routine
 
-    private val handler = Handler(Looper.getMainLooper())
+    private val handler = Handler(Looper.getMainLooper()) // Handler for timer updates
     private val timerRunnable = object : Runnable {
         override fun run() {
             if (!isPaused) {
                 secondsElapsed++
-                timerTextView.text = formatTime(secondsElapsed)
+                timerTextView.text = formatTime(secondsElapsed) // Update timer display
             }
-            handler.postDelayed(this, 1000)
+            handler.postDelayed(this, 1000) // Repeat every second
         }
     }
 
@@ -62,11 +63,14 @@ class RoutineDetailFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val view = inflater.inflate(R.layout.fragment_routine_detail, container, false)
+
+        // Bind views
         containerLayout = view.findViewById(R.id.exerciseLogContainer)
         timerTextView = view.findViewById(R.id.timerDisplay)
         topButton = view.findViewById(R.id.startRoutineBtn)
         completeButton = view.findViewById(R.id.completeRoutineBtn)
 
+        // Hide keyboard when touching outside input
         view.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
                 val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -75,18 +79,17 @@ class RoutineDetailFragment : Fragment() {
             false
         }
 
+        //  Start/Pause/Resume Button
         topButton.setOnClickListener {
             if (topButton.text == "Start Routine") {
-                routineStartTime = System.currentTimeMillis()
-                Log.d("RoutineDebug", "Routine started at: $routineStartTime")
-
-                handler.post(timerRunnable)
+                routineStartTime = System.currentTimeMillis() // Record start time
+                handler.post(timerRunnable) // Start timer
                 topButton.text = "Pause Routine"
                 topButton.setBackgroundColor(Color.parseColor("#FFD600"))
                 topButton.setTextColor(Color.BLACK)
-                completeButton.visibility = View.VISIBLE
+                completeButton.visibility = View.VISIBLE // Show complete button
             } else {
-                isPaused = !isPaused
+                isPaused = !isPaused // Toggle pause state
                 topButton.text = if (isPaused) "Resume Routine" else "Pause Routine"
                 val bgColor = if (isPaused) "#444444" else "#FFD600"
                 val textColor = if (isPaused) "#FFFFFF" else "#000000"
@@ -95,27 +98,26 @@ class RoutineDetailFragment : Fragment() {
             }
         }
 
+        // Complete Button
         completeButton.setOnClickListener {
-            handler.removeCallbacks(timerRunnable)
-
+            handler.removeCallbacks(timerRunnable) // Stop timer
             val routineEndTime = System.currentTimeMillis()
             val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
             val userId = sharedPref.getString("loggedInUser", "guest") ?: "guest"
-            Log.d("RoutineDebug", "Routine completed at: $routineEndTime")
-
             val db = UserDatabase(requireContext())
             db.insertCompletedRoutineV2(userId, routineName ?: "Unnamed", routineStartTime, routineEndTime)
-
             Toast.makeText(requireContext(), "Routine Completed!", Toast.LENGTH_SHORT).show()
 
+            // Navigate to ProfileFragment
             requireActivity().supportFragmentManager.beginTransaction()
                 .replace(R.id.fragment_container, ProfileFragment())
                 .commit()
         }
 
+        //  Add exercises to the screen
         val exercises = UserDatabase(requireContext()).getExercisesForRoutine(routineId)
         for ((name, category) in exercises) {
-            containerLayout.addView(createExerciseLog(name, category))
+            containerLayout.addView(createExerciseLog(name, category)) // Add exercise log
         }
 
         return view
@@ -123,15 +125,17 @@ class RoutineDetailFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        handler.removeCallbacks(timerRunnable)
+        handler.removeCallbacks(timerRunnable) // Stop timer when fragment is destroyed
     }
 
+    // Format seconds into MM:SS format
     private fun formatTime(seconds: Int): String {
         val minutes = seconds / 60
         val secs = seconds % 60
         return String.format("%02d:%02d", minutes, secs)
     }
 
+    // Create the UI view for a single exercise log
     private fun createExerciseLog(name: String, category: String): View {
         val context = requireContext()
         val container = LinearLayout(context).apply {
@@ -152,6 +156,7 @@ class RoutineDetailFragment : Fragment() {
         }
 
         fun addSetRow(setNumber: Int) {
+            // Header row (SET, KG, REPS)
             val headerRow = LinearLayout(context).apply {
                 orientation = LinearLayout.HORIZONTAL
                 layoutParams = LinearLayout.LayoutParams(
@@ -169,6 +174,7 @@ class RoutineDetailFragment : Fragment() {
                 })
             }
 
+            // Input row for a set (set number, kg input, reps input)
             val valueRow = LinearLayout(context).apply {
                 orientation = LinearLayout.HORIZONTAL
                 layoutParams = LinearLayout.LayoutParams(
@@ -220,7 +226,7 @@ class RoutineDetailFragment : Fragment() {
         }
 
         var setCount = 1
-        addSetRow(setCount)
+        addSetRow(setCount) // Add initial set
 
         val roundedBackground = GradientDrawable().apply {
             setColor(Color.parseColor("#2D2D2D"))
@@ -244,9 +250,10 @@ class RoutineDetailFragment : Fragment() {
 
         addSetButton.setOnClickListener {
             setCount++
-            addSetRow(setCount)
+            addSetRow(setCount) // Add new input row for another set
         }
 
+        // Add all elements to the container and return it
         container.addView(title)
         container.addView(setContainer)
         container.addView(addSetButton)

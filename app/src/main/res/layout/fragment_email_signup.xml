@@ -6,11 +6,13 @@
     android:background="#121212"
     android:fillViewport="true">
 
+    <!-- vertical container for all inputs and buttons -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <!-- greeting text -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -20,6 +22,7 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="48dp" />
 
+        <!-- app title -->
         <TextView
             android:id="@+id/striveTitle"
             android:layout_width="wrap_content"
@@ -31,8 +34,14 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="56dp" />
 
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Email" android:textColor="#FFFFFF" />
+        <!-- email label -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Email"
+            android:textColor="#FFFFFF" />
+
+        <!-- email input field -->
         <EditText
             android:id="@+id/emailInput"
             android:layout_width="match_parent"
@@ -46,8 +55,14 @@
             android:layout_marginBottom="28dp"
             android:imeOptions="actionNext" />
 
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Username" android:textColor="#FFFFFF" />
+        <!-- username label -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Username"
+            android:textColor="#FFFFFF" />
+
+        <!-- username input field -->
         <EditText
             android:id="@+id/usernameInput"
             android:layout_width="match_parent"
@@ -60,8 +75,14 @@
             android:layout_marginBottom="28dp"
             android:imeOptions="actionNext" />
 
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Password" android:textColor="#FFFFFF" />
+        <!-- password label -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Password"
+            android:textColor="#FFFFFF" />
+
+        <!-- password input field -->
         <EditText
             android:id="@+id/passwordInput"
             android:layout_width="match_parent"
@@ -75,6 +96,7 @@
             android:layout_marginBottom="28dp"
             android:imeOptions="actionDone" />
 
+        <!-- terms and conditions checkbox -->
         <CheckBox
             android:id="@+id/termsCheckbox"
             android:layout_width="wrap_content"
@@ -83,6 +105,7 @@
             android:textColor="#FFFFFF"
             android:layout_marginBottom="36dp" />
 
+        <!-- continue button -->
         <Button
             android:id="@+id/continueBtn"
             android:layout_width="wrap_content"
@@ -92,5 +115,6 @@
             android:backgroundTint="#FFD600"
             android:padding="12dp"
             android:layout_gravity="center" />
+
     </LinearLayout>
 </ScrollView>

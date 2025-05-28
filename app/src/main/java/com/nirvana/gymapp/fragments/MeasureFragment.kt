@@ -6,7 +6,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
@@ -39,9 +38,12 @@ class MeasureFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_measures, container, false)
 
         db = UserDatabase(requireContext())
+
+        // Retrieve currently logged-in user ID from shared preferences
         val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
         userId = sharedPref.getString("loggedInUser", "") ?: ""
 
+        // Find views by ID
         val weightInput = view.findViewById<EditText>(R.id.weightInput)
         val chestInput = view.findViewById<EditText>(R.id.chestInput)
         val waistInput = view.findViewById<EditText>(R.id.waistInput)
@@ -51,11 +53,13 @@ class MeasureFragment : Fragment() {
         historyContainer = view.findViewById(R.id.historyContainer)
         uploadedPhotosText = view.findViewById(R.id.uploadedPhotosText)
 
+        // Populate UI with previous entries from DB
         val previousEntries = db.getMeasurementsForUser(userId)
         for ((timestamp, weight, chest, waist, arms) in previousEntries) {
             addMeasurementToHistory(timestamp, weight, chest, waist, arms)
         }
 
+        // Set up gallery image picker
         galleryLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
@@ -64,12 +68,14 @@ class MeasureFragment : Fragment() {
 
             try {
                 if (clipData != null) {
+                    // Multiple images selected
                     for (i in 0 until clipData.itemCount) {
                         val uri = clipData.getItemAt(i).uri
                         val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
                         progressPhotos.add(bitmap)
                     }
                 } else if (image != null) {
+                    // Single image selected
                     val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, image)
                     progressPhotos.add(bitmap)
                 }
@@ -82,6 +88,7 @@ class MeasureFragment : Fragment() {
             }
         }
 
+        // Set up camera preview for taking a new image
         cameraLauncher = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
             bitmap?.let {
                 progressPhotos.add(it)
@@ -90,6 +97,7 @@ class MeasureFragment : Fragment() {
             }
         }
 
+        // Prompt user to choose photo upload method
         uploadBtn.setOnClickListener {
             val options = arrayOf("Choose from gallery", "Take a photo")
             AlertDialog.Builder(requireContext())
@@ -111,6 +119,7 @@ class MeasureFragment : Fragment() {
                 .show()
         }
 
+        // Save measurement and photos to database
         saveBtn.setOnClickListener {
             val weight = weightInput.text.toString().trim()
             val chest = chestInput.text.toString().trim()
@@ -147,6 +156,7 @@ class MeasureFragment : Fragment() {
             uploadedPhotosText.visibility = View.GONE
         }
 
+        // Dismiss keyboard on outside tap
         view.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
                 val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -158,6 +168,7 @@ class MeasureFragment : Fragment() {
         return view
     }
 
+    // Render a log entry to the history section
     private fun addMeasurementToHistory(
         timestamp: String,
         weight: String,
@@ -196,10 +207,11 @@ class MeasureFragment : Fragment() {
             layoutParams = LinearLayout.LayoutParams(0, 0, 1f)
         }
 
+        // Delete button to remove entry
         val deleteBtn = ImageButton(context).apply {
             setImageResource(R.drawable.binicon)
             background = null
-            layoutParams = LinearLayout.LayoutParams(130, 130) // larger bin icon
+            layoutParams = LinearLayout.LayoutParams(130, 130)
             scaleType = ImageView.ScaleType.FIT_CENTER
             adjustViewBounds = true
             setColorFilter(Color.RED)
@@ -229,6 +241,7 @@ class MeasureFragment : Fragment() {
             )
         })
 
+        // Add measurement values to card
         val entries = listOf("Weight" to weight, "Chest" to chest, "Waist" to waist, "Arms" to arms)
         for ((label, value) in entries) {
             val unit = if (label == "Weight") "kg" else "cm"
@@ -247,13 +260,14 @@ class MeasureFragment : Fragment() {
             logCard.addView(textView)
         }
 
-        // ⬆️ Extra space before photo section
+        // Add space before photo section
         logCard.addView(Space(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, 48
             )
         })
 
+        // Load and show progress photos
         val photoPaths = db.getPhotosForMeasurement(userId, timestamp)
         if (photoPaths.isNotEmpty()) {
             val scrollView = HorizontalScrollView(context).apply {
@@ -301,9 +315,7 @@ class MeasureFragment : Fragment() {
         historyContainer.addView(logCard, 0)
     }
 
-
-
-
+    // Save a Bitmap image to internal storage and return file path
     private fun savePhotoToStorage(bitmap: Bitmap, filename: String): String {
         val file = File(requireContext().filesDir, filename)
         FileOutputStream(file).use { out ->

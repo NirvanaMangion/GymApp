@@ -8,6 +8,7 @@ import android.database.Cursor
 class ExerciseDatabase(context: Context) : SQLiteOpenHelper(context, "exercises.db", null, 1) {
 
     override fun onCreate(db: SQLiteDatabase) {
+        // Create main exercises table
         db.execSQL("""
             CREATE TABLE exercises (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -16,7 +17,7 @@ class ExerciseDatabase(context: Context) : SQLiteOpenHelper(context, "exercises.
             );
         """.trimIndent())
 
-        // New table for user-selected exercises
+        // Create table for selected exercises (used by user)
         db.execSQL("""
             CREATE TABLE IF NOT EXISTS selected_exercises (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,6 +25,8 @@ class ExerciseDatabase(context: Context) : SQLiteOpenHelper(context, "exercises.
                 category TEXT NOT NULL
             );
         """.trimIndent())
+
+        // Prepopulate default exercises
         val exercises = listOf(
             "Ab Wheel Rollout" to "Core",
             "Arnold Press" to "Shoulders",
@@ -111,45 +114,61 @@ class ExerciseDatabase(context: Context) : SQLiteOpenHelper(context, "exercises.
             "Zottman Curl" to "Biceps"
         )
 
+        // Insert all exercises into database
         for ((name, category) in exercises) {
             db.execSQL("INSERT INTO exercises (name, category) VALUES (?, ?)", arrayOf(name, category))
         }
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        // Add selected_exercises table if upgrading from older version
         if (oldVersion < 2) {
             db.execSQL("CREATE TABLE IF NOT EXISTS selected_exercises (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, category TEXT)")
         }
     }
 
+    // Get all exercises from the database
     fun getAllExercises(): List<Pair<String, String>> {
         val db = readableDatabase
         val cursor: Cursor = db.rawQuery("SELECT name, category FROM exercises ORDER BY name", null)
         val list = mutableListOf<Pair<String, String>>()
+
+        // Add each exercise to the list
         while (cursor.moveToNext()) {
             list.add(cursor.getString(0) to cursor.getString(1))
         }
+
         cursor.close()
         return list
     }
 
+    // Add a user-selected exercise to the table
     fun addSelectedExercise(name: String, category: String) {
         val db = writableDatabase
+
+        // Ensure table exists
         db.execSQL("CREATE TABLE IF NOT EXISTS selected_exercises (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, category TEXT)")
+
+        // Insert selected exercise
         db.execSQL("INSERT INTO selected_exercises (name, category) VALUES (?, ?)", arrayOf(name, category))
     }
 
+    // Get all selected exercises
     fun getSelectedExercises(): List<Pair<String, String>> {
         val db = readableDatabase
         val cursor: Cursor = db.rawQuery("SELECT name, category FROM selected_exercises", null)
         val list = mutableListOf<Pair<String, String>>()
+
+        // Add each selected exercise to list
         while (cursor.moveToNext()) {
             list.add(cursor.getString(0) to cursor.getString(1))
         }
+
         cursor.close()
         return list
     }
 
+    // Clear all selected exercises
     fun clearSelectedExercises() {
         val db = writableDatabase
         db.execSQL("DELETE FROM selected_exercises")

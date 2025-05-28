@@ -6,6 +6,7 @@
     android:background="#121212"
     android:padding="16dp">
 
+    <!-- container for dynamic workout entries -->
     <LinearLayout
         android:id="@+id/historyContainer"
         android:layout_width="match_parent"

@@ -23,20 +23,25 @@ import java.io.IOException
 
 class ProfileFragment : Fragment() {
 
-    private lateinit var db: UserDatabase
-    private lateinit var userId: String
-    private lateinit var profileImageView: ImageView
-    private lateinit var usernameTextView: TextView
-    private lateinit var chart: com.github.mikephil.charting.charts.LineChart
-    private lateinit var noDataText: TextView
+    // --- Database and user info ---
+    private lateinit var db: UserDatabase // Database helper instance
+    private lateinit var userId: String // Currently logged-in user's ID
 
-    private lateinit var galleryLauncher: ActivityResultLauncher<Intent>
-    private lateinit var cameraLauncher: ActivityResultLauncher<Void?>
-    private var imageUri: Uri? = null
+    // --- Views ---
+    private lateinit var profileImageView: ImageView // User's profile picture
+    private lateinit var usernameTextView: TextView // TextView for displaying username
+    private lateinit var chart: com.github.mikephil.charting.charts.LineChart // Chart to show workout stats
+    private lateinit var noDataText: TextView // Message to display when no chart data exists
+
+    // --- Image handling ---
+    private lateinit var galleryLauncher: ActivityResultLauncher<Intent> // For selecting image from gallery
+    private lateinit var cameraLauncher: ActivityResultLauncher<Void?> // For capturing photo from camera
+    private var imageUri: Uri? = null // To store selected image URI
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Handle gallery image selection
         galleryLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
@@ -62,6 +67,7 @@ class ProfileFragment : Fragment() {
             }
         }
 
+        // Handle image taken by camera
         cameraLauncher = registerForActivityResult(
             ActivityResultContracts.TakePicturePreview()
         ) { bitmap: Bitmap? ->
@@ -83,23 +89,28 @@ class ProfileFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_profile, container, false)
 
+        // Initialize database and retrieve user ID from shared preferences
         db = UserDatabase(requireContext())
         val sharedPref = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
         userId = sharedPref.getString("loggedInUser", "Username") ?: "Username"
 
+        // Bind UI views
         profileImageView = view.findViewById(R.id.profileImageView)
         usernameTextView = view.findViewById(R.id.usernameTextView)
         chart = view.findViewById(R.id.lineChart)
         noDataText = view.findViewById(R.id.tvNoData)
 
+        // Buttons for switching charts and navigating
         val btnDuration = view.findViewById<Button>(R.id.btnDuration)
         val btnVolume = view.findViewById<Button>(R.id.btnVolume)
         val btnReps = view.findViewById<Button>(R.id.btnReps)
         val btnWorkoutHistory = view.findViewById<Button>(R.id.btnWorkoutHistory)
         val btnMeasures = view.findViewById<Button>(R.id.btnMeasures)
 
+        // Display username
         usernameTextView.text = userId
 
+        // Try loading a saved profile image from database
         val savedUri = db.getProfileImage(userId)
         if (!savedUri.isNullOrEmpty()) {
             try {
@@ -113,10 +124,12 @@ class ProfileFragment : Fragment() {
             profileImageView.setImageResource(R.drawable.profileicon)
         }
 
+        // Clicking profile image prompts source selection (camera/gallery)
         profileImageView.setOnClickListener {
             showImageSourceDialog()
         }
 
+        // Navigation button handlers
         btnWorkoutHistory.setOnClickListener {
             (activity as? MainActivity)?.loadFragment(
                 WorkoutHistoryFragment(),
@@ -135,6 +148,7 @@ class ProfileFragment : Fragment() {
             )
         }
 
+        // Highlights the selected chart filter button
         fun highlightSelected(selected: Button) {
             val selectedColor = "#FFD600"
             val defaultColor = "#333333"
@@ -149,11 +163,13 @@ class ProfileFragment : Fragment() {
             }
         }
 
+        // Loads workout statistics and displays them as a line chart
         fun loadAndShowLineChart(type: String) {
             try {
                 val entries = mutableListOf<com.github.mikephil.charting.data.Entry>()
                 val labels = mutableListOf<String>()
 
+                // Get chart data from database depending on type
                 val rawData = when (type) {
                     "duration" -> db.getV2Durations(userId)
                     "volume" -> db.getDailyVolumes(userId)
@@ -180,7 +196,7 @@ class ProfileFragment : Fragment() {
 
                 for ((date, value) in sorted) {
                     entries.add(com.github.mikephil.charting.data.Entry(index, value.toFloat()))
-                    labels.add(date.substring(5))
+                    labels.add(date.substring(5)) // Show MM-DD
                     index += 1f
                 }
 
@@ -217,6 +233,7 @@ class ProfileFragment : Fragment() {
             }
         }
 
+        // Chart button handlers
         btnDuration.setOnClickListener {
             highlightSelected(btnDuration)
             loadAndShowLineChart("duration")
@@ -232,18 +249,19 @@ class ProfileFragment : Fragment() {
             loadAndShowLineChart("reps")
         }
 
+        // Load default chart
         highlightSelected(btnDuration)
         loadAndShowLineChart("duration")
 
         return view
     }
 
+    // Efficiently decode image from URI to avoid memory issues
     private fun loadBitmapSafelyFromUri(uri: Uri): Bitmap? {
         return try {
             val options = BitmapFactory.Options().apply {
                 inJustDecodeBounds = true
             }
-
             requireContext().contentResolver.openInputStream(uri)?.use {
                 BitmapFactory.decodeStream(it, null, options)
             }
@@ -262,6 +280,7 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    // Calculate optimal sample size for bitmap decoding
     private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
         val (height: Int, width: Int) = options.outHeight to options.outWidth
         var inSampleSize = 1
@@ -276,6 +295,7 @@ class ProfileFragment : Fragment() {
         return inSampleSize
     }
 
+    // Save profile image to gallery and return its URI
     private fun saveBitmapToGallery(bitmap: Bitmap): Uri? {
         val contentValues = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, "profile_${System.currentTimeMillis()}.jpg")
@@ -303,6 +323,7 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    // Show dialog to choose image source (gallery or camera)
     private fun showImageSourceDialog() {
         val options = arrayOf("Choose from gallery", "Take a photo")
         AlertDialog.Builder(requireContext())

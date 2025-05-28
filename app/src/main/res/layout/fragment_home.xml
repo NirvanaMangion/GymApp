@@ -90,7 +90,6 @@
                         android:text="My Routine (0)"
                         android:textColor="@android:color/white"
                         android:textSize="14sp"
-                        android:drawableEnd="@drawable/right_arrow"
                         android:drawablePadding="4dp"
                         android:clickable="true"
                         android:focusable="true" />
