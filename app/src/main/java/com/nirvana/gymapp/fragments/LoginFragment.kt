@@ -60,7 +60,12 @@ class LoginFragment : Fragment() {
                     sharedPref.edit().putString("loggedInUser", username).apply() // Save user
 
                     // Load home screen only after background data loads
-                    (activity as MainActivity).preloadAndLoadHome()
+                    (activity as? MainActivity)?.fetchAndCacheQuote {
+                        activity?.runOnUiThread {
+                            (activity as? MainActivity)?.preloadAndLoadHome()
+                        }
+                    }
+
                 }
                 else -> {
                     toast("Invalid username or password.")       // Invalid credentials

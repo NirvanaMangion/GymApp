@@ -105,7 +105,11 @@ class PhoneSignupFragment : Fragment() {
                     quotePrefs.edit().remove("cachedQuote").apply()
 
                     // Proceed to home
-                    (activity as MainActivity).preloadAndLoadHome()
+                    (activity as? MainActivity)?.fetchAndCacheQuote {
+                        activity?.runOnUiThread {
+                            (activity as? MainActivity)?.preloadAndLoadHome()
+                        }
+                    }
                 }
             }
         }

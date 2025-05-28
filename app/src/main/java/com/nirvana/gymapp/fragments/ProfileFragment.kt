@@ -135,7 +135,7 @@ class ProfileFragment : Fragment() {
                 WorkoutHistoryFragment(),
                 title = "Workout History",
                 showUpArrow = true,
-                showBottomNav = false
+                showBottomNav = false   // <--- ADD THIS PARAMETER
             )
         }
 
@@ -144,9 +144,10 @@ class ProfileFragment : Fragment() {
                 MeasureFragment(),
                 title = "Body Measures",
                 showUpArrow = true,
-                showBottomNav = false
+                showBottomNav = false   // <--- ADD THIS PARAMETER
             )
         }
+
 
         // Highlights the selected chart filter button
         fun highlightSelected(selected: Button) {

@@ -101,7 +101,12 @@ class EmailSignupFragment : Fragment() {
                     quotePrefs.edit().remove("cachedQuote").apply()
 
                     // Go to home screen
-                    (activity as MainActivity).preloadAndLoadHome()
+                    (activity as? MainActivity)?.fetchAndCacheQuote {
+                        activity?.runOnUiThread {
+                            (activity as? MainActivity)?.preloadAndLoadHome()
+                        }
+                    }
+
                 }
             }
         }

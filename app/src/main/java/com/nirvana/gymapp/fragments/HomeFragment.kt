@@ -51,7 +51,7 @@ class HomeFragment : Fragment() {
                 AddRoutineFragment(),
                 title = "Add Routine",
                 showUpArrow = true,
-                showBottomNav = true
+                showBottomNav = false  // Explicitly hide bottom nav
             )
         }
 
@@ -107,7 +107,7 @@ class HomeFragment : Fragment() {
                             fragment = detailFragment,
                             title = name,
                             showUpArrow = true,
-                            showBottomNav = false
+                            showBottomNav = false  // Explicitly hide bottom nav
                         )
                     }
                 }

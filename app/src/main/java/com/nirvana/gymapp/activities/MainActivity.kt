@@ -12,7 +12,6 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
 import com.nirvana.gymapp.R
 import com.nirvana.gymapp.database.UserDatabase
 import com.nirvana.gymapp.fragments.*
@@ -32,45 +31,42 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Bind toolbar and elements
         toolbar = findViewById(R.id.toolbar)
         titleText = findViewById(R.id.custom_title)
         customBack = findViewById(R.id.custom_back)
         bottomNav = findViewById(R.id.bottomNav)
 
-        // Set custom toolbar without default title
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
 
-        // Handle back arrow click
         customBack.setOnClickListener { onBackPressed() }
 
-        // Show initial screen based on intent extra
+        // Listen for any fragment change (including popping back)
+        supportFragmentManager.addOnBackStackChangedListener {
+            updateToolbarAndBottomNav()
+        }
+
         if (savedInstanceState == null) {
             when (intent.getStringExtra("start")) {
-                "email" -> loadFragment(EmailSignupFragment(), "Sign up", true, false, false)
-                "phone" -> loadFragment(PhoneSignupFragment(), "Sign up", true, false, false)
-                "login" -> loadFragment(LoginFragment(), "Log In", true, false, false)
-                else -> preloadAndLoadHome() // Default to home if no intent
+                "email" -> loadFragment(EmailSignupFragment(), "Sign up", true, false, addToBackStack = false)
+                "phone" -> loadFragment(PhoneSignupFragment(), "Sign up", true, false, addToBackStack = false)
+                "login" -> loadFragment(LoginFragment(), "Log In", true, false, addToBackStack = false)
+                else -> preloadAndLoadHome()
             }
         }
 
-        // Bottom navigation buttons
         findViewById<View>(R.id.navHome).setOnClickListener {
-            preloadAndLoadHome() // Refresh home
+            preloadAndLoadHome()
         }
-
         findViewById<View>(R.id.navProfile).setOnClickListener {
             loadFragment(ProfileFragment(), "Profile", false, true)
         }
-
         findViewById<View>(R.id.navSettings).setOnClickListener {
             loadFragment(SettingsFragment(), "Settings", false, true)
         }
     }
 
 
-    // Loads a fragment with toolbar/nav visibility control
     fun loadFragment(
         fragment: Fragment,
         title: String,
@@ -80,57 +76,87 @@ class MainActivity : AppCompatActivity() {
     ) {
         val transaction = supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, fragment)
-
-        if (addToBackStack) {
-            transaction.addToBackStack(null)
-        }
-
+        if (addToBackStack) transaction.addToBackStack(null)
         transaction.commit()
         supportFragmentManager.executePendingTransactions()
 
-        // Update toolbar title and visibility
+        // Set the initial UI for forward navigation
         titleText.text = title
         customBack.visibility = if (showUpArrow) View.VISIBLE else View.GONE
         bottomNav.visibility = if (showBottomNav) View.VISIBLE else View.GONE
     }
 
-
-    // Loads user routines and motivational quote before showing HomeFragment
-    fun preloadAndLoadHome() {
-        val sharedPref = getSharedPreferences("AppSessionPrefs", Context.MODE_PRIVATE)
-        val userPref = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
-        val username = userPref.getString("loggedInUser", "guest") ?: "guest"
-        val cachedQuote = sharedPref.getString("cachedQuote", null)
-
-        var routinesDone = false
-        var quoteDone = false
-
-        // Wait for both routines and quote to load
-        fun tryLoadHome() {
-            if (routinesDone && quoteDone) {
-                runOnUiThread {
-                    loadFragment(HomeFragment(), "Home", false, true, false)
-                }
+    // Updates toolbar title, up arrow, and bottom nav for current fragment
+    private fun updateToolbarAndBottomNav() {
+        val fragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
+        when (fragment) {
+            is HomeFragment -> {
+                titleText.text = "Home"
+                customBack.visibility = View.GONE
+                bottomNav.visibility = View.VISIBLE
+            }
+            is ProfileFragment -> {
+                titleText.text = "Profile"
+                customBack.visibility = View.GONE
+                bottomNav.visibility = View.VISIBLE
+            }
+            is SettingsFragment -> {
+                titleText.text = "Settings"
+                customBack.visibility = View.GONE
+                bottomNav.visibility = View.VISIBLE
+            }
+            else -> {
+                // For all other fragments: up arrow, no bottom nav
+                // Optionally set title if you wish
+                customBack.visibility = View.VISIBLE
+                bottomNav.visibility = View.GONE
             }
         }
+    }
 
-        // Load saved routines in background thread
+    // Preload routines and go to HomeFragment, using the cached quote only!
+    fun preloadAndLoadHome() {
+        val userPref = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
+        val username = userPref.getString("loggedInUser", "guest") ?: "guest"
+
         Thread {
             val db = UserDatabase(this)
-            db.getAllSavedRoutines(username) // Assuming this caches or populates memory
-            routinesDone = true
-            tryLoadHome()
+            db.getAllSavedRoutines(username)
+            runOnUiThread {
+                loadFragment(HomeFragment(), "Home", false, true)
+            }
         }.start()
+    }
 
-        // Load daily motivational quote using OkHttp
+
+    fun fetchAndCacheQuote(onDone: (() -> Unit)? = null) {
+        val sharedPref = getSharedPreferences("AppSessionPrefs", Context.MODE_PRIVATE)
         val client = OkHttpClient()
         val url = "http://api.forismatic.com/api/1.0/?method=getQuote&lang=en&format=json"
         val request = Request.Builder().url(url).build()
-
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                // On failure, use a fallback quote
-                if (cachedQuote == null) {
+                val fallbackQuotes = listOf(
+                    "No pain, no gain.",
+                    "Train insane or remain the same.",
+                    "Push harder than yesterday if you want a different tomorrow.",
+                    "The body achieves what the mind believes.",
+                    "Success starts with self-discipline.",
+                    "Sweat is fat crying."
+                )
+                val random = fallbackQuotes.random()
+                sharedPref.edit().putString("cachedQuote", random).apply()
+                onDone?.invoke()
+            }
+            override fun onResponse(call: Call, response: Response) {
+                try {
+                    val raw = response.body?.string()?.replace("\\\"", "\"")
+                    val json = JSONObject(raw ?: "")
+                    val quote = json.optString("quoteText", "Keep pushing forward.").trim()
+                    val author = json.optString("quoteAuthor", "").trim()
+                    val full = if (author.isNotEmpty()) "$quote\n\n– $author" else quote
+                    sharedPref.edit().putString("cachedQuote", full).apply()
+                } catch (e: Exception) {
                     val fallbackQuotes = listOf(
                         "No pain, no gain.",
                         "Train insane or remain the same.",
@@ -142,77 +168,19 @@ class MainActivity : AppCompatActivity() {
                     val random = fallbackQuotes.random()
                     sharedPref.edit().putString("cachedQuote", random).apply()
                 }
-                quoteDone = true
-                tryLoadHome()
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                try {
-                    val raw = response.body?.string()?.replace("\\\"", "\"")
-                    val json = JSONObject(raw ?: "")
-                    val quote = json.optString("quoteText", "Keep pushing forward.").trim()
-                    val author = json.optString("quoteAuthor", "").trim()
-                    val full = if (author.isNotEmpty()) "$quote\n\n– $author" else quote
-                    sharedPref.edit().putString("cachedQuote", full).apply()
-                } catch (e: Exception) {
-                    // Fallback if JSON fails
-                    if (cachedQuote == null) {
-                        val fallbackQuotes = listOf(
-                            "No pain, no gain.",
-                            "Train insane or remain the same.",
-                            "Push harder than yesterday if you want a different tomorrow.",
-                            "The body achieves what the mind believes.",
-                            "Success starts with self-discipline.",
-                            "Sweat is fat crying."
-                        )
-                        val random = fallbackQuotes.random()
-                        sharedPref.edit().putString("cachedQuote", random).apply()
-                    }
-                }
-                quoteDone = true
-                tryLoadHome()
+                onDone?.invoke()
             }
         })
     }
 
-
-    // Handles back navigation logic and updates toolbar/nav visibility
+    // Handles back navigation
     override fun onBackPressed() {
-        val fragmentManager = supportFragmentManager
-
-        if (fragmentManager.backStackEntryCount > 1) {
-            fragmentManager.popBackStack()
-
-            // Listener to update UI based on the new top fragment
-            fragmentManager.addOnBackStackChangedListener(object : FragmentManager.OnBackStackChangedListener {
-                override fun onBackStackChanged() {
-                    val currentFragment = fragmentManager.findFragmentById(R.id.fragment_container)
-                    when (currentFragment) {
-                        is HomeFragment -> {
-                            titleText.text = "Home"
-                            customBack.visibility = View.GONE
-                            bottomNav.visibility = View.VISIBLE
-                        }
-                        is ProfileFragment -> {
-                            titleText.text = "Profile"
-                            customBack.visibility = View.GONE
-                            bottomNav.visibility = View.VISIBLE
-                        }
-                        is SettingsFragment -> {
-                            titleText.text = "Settings"
-                            customBack.visibility = View.GONE
-                            bottomNav.visibility = View.VISIBLE
-                        }
-                    }
-                    fragmentManager.removeOnBackStackChangedListener(this)
-                }
-            })
+        if (supportFragmentManager.backStackEntryCount > 1) {
+            supportFragmentManager.popBackStack()
         } else {
-            // Default system back if no more fragments
             super.onBackPressed()
         }
     }
-
 
     // Hide keyboard when touching outside EditText
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {

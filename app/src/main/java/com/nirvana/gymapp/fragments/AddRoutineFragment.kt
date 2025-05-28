@@ -53,6 +53,7 @@ class AddRoutineFragment : Fragment() {
             )
         }
 
+
         // Save routine to DB
         saveButton.setOnClickListener {
             val name = routineNameInput.text.toString().trim()
