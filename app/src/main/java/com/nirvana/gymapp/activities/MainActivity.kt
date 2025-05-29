@@ -47,14 +47,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (savedInstanceState == null) {
+            // Determine initial screen based on intent extra ("start") passed to the activity
             when (intent.getStringExtra("start")) {
                 "email" -> loadFragment(EmailSignupFragment(), "Sign up", true, false, addToBackStack = false)
                 "phone" -> loadFragment(PhoneSignupFragment(), "Sign up", true, false, addToBackStack = false)
                 "login" -> loadFragment(LoginFragment(), "Log In", true, false, addToBackStack = false)
-                else -> preloadAndLoadHome()
+                else -> preloadAndLoadHome()  // Fallback to home if no valid intent extra is provided
             }
         }
 
+        // Set up bottom navigation button actions
         findViewById<View>(R.id.navHome).setOnClickListener {
             preloadAndLoadHome()
         }
@@ -74,10 +76,13 @@ class MainActivity : AppCompatActivity() {
         showBottomNav: Boolean,
         addToBackStack: Boolean = true
     ) {
+        // Replace current fragment with the new one and optionally add to back stack
         val transaction = supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, fragment)
         if (addToBackStack) transaction.addToBackStack(null)
         transaction.commit()
+
+        // Ensure transaction is completed immediately to avoid UI delays
         supportFragmentManager.executePendingTransactions()
 
         // Set the initial UI for forward navigation

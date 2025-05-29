@@ -156,14 +156,11 @@ class MeasureFragment : Fragment() {
             uploadedPhotosText.visibility = View.GONE
         }
 
-        // Dismiss keyboard on outside tap
-        view.setOnTouchListener { _, event ->
-            if (event.action == MotionEvent.ACTION_DOWN) {
-                val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.hideSoftInputFromWindow(view.windowToken, 0)
-            }
-            false
+        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        view.windowToken?.let { token ->
+            imm.hideSoftInputFromWindow(token, 0)
         }
+
 
         return view
     }
