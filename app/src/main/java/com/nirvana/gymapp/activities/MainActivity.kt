@@ -11,6 +11,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import com.nirvana.gymapp.R
 import com.nirvana.gymapp.database.UserDatabase
@@ -35,6 +37,14 @@ class MainActivity : AppCompatActivity() {
         titleText = findViewById(R.id.custom_title)
         customBack = findViewById(R.id.custom_back)
         bottomNav = findViewById(R.id.bottomNav)
+
+        // --- KEYBOARD VISIBILITY LISTENER ---
+        listenForKeyboard(findViewById(android.R.id.content)) { isKeyboardOpen ->
+            bottomNav.visibility = if (isKeyboardOpen) View.GONE
+            else if (shouldShowBottomNav()) View.VISIBLE
+            else View.GONE
+        }
+        // --- END KEYBOARD LISTENER ---
 
         // Setup the toolbar without default title
         setSupportActionBar(toolbar)
@@ -84,7 +94,7 @@ class MainActivity : AppCompatActivity() {
 
         titleText.text = title
         customBack.visibility = if (showUpArrow) View.VISIBLE else View.GONE
-        bottomNav.visibility = if (showBottomNav) View.VISIBLE else View.GONE
+        bottomNav.visibility = if (showBottomNav && !isKeyboardVisible()) View.VISIBLE else View.GONE
     }
 
     // Adjusts toolbar and bottom nav visibility based on current fragment
@@ -94,17 +104,17 @@ class MainActivity : AppCompatActivity() {
             is HomeFragment -> {
                 titleText.text = "Home"
                 customBack.visibility = View.GONE
-                bottomNav.visibility = View.VISIBLE
+                bottomNav.visibility = if (!isKeyboardVisible()) View.VISIBLE else View.GONE
             }
             is ProfileFragment -> {
                 titleText.text = "Profile"
                 customBack.visibility = View.GONE
-                bottomNav.visibility = View.VISIBLE
+                bottomNav.visibility = if (!isKeyboardVisible()) View.VISIBLE else View.GONE
             }
             is SettingsFragment -> {
                 titleText.text = "Settings"
                 customBack.visibility = View.GONE
-                bottomNav.visibility = View.VISIBLE
+                bottomNav.visibility = if (!isKeyboardVisible()) View.VISIBLE else View.GONE
             }
             else -> {
                 customBack.visibility = View.VISIBLE
@@ -112,6 +122,16 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    // Helper: Should we show the bottom nav based on fragment?
+    private fun shouldShowBottomNav(): Boolean {
+        val fragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
+        return fragment is HomeFragment || fragment is ProfileFragment || fragment is SettingsFragment
+    }
+
+    // Helper: Track keyboard visibility state
+    private var _isKeyboardVisible: Boolean = false
+    private fun isKeyboardVisible() = _isKeyboardVisible
 
     // Load user data and launch HomeFragment
     fun preloadAndLoadHome() {
@@ -181,31 +201,35 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Handle keyboard visibility and navigation bar visibility on touch
+    // Simplified: Remove manual bottomNav hide/show from touch
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if (ev.action == MotionEvent.ACTION_DOWN) {
             val v = currentFocus
             if (v is android.widget.EditText) {
                 val outRect = Rect()
                 v.getGlobalVisibleRect(outRect)
-                val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
-
                 if (!outRect.contains(ev.rawX.toInt(), ev.rawY.toInt())) {
-                    // Tap outside input field: hide keyboard and nav bar if in Settings
                     v.clearFocus()
                     val imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
                     imm.hideSoftInputFromWindow(v.windowToken, 0)
-                    if (currentFragment is SettingsFragment) {
-                        bottomNav.visibility = View.GONE
-                    }
-                } else {
-                    // Tap inside input field: keep nav bar if in Settings
-                    if (currentFragment is SettingsFragment) {
-                        bottomNav.visibility = View.VISIBLE
-                    }
                 }
             }
         }
         return super.dispatchTouchEvent(ev)
+    }
+
+    // --- Utility: Keyboard visibility listener ---
+    private fun listenForKeyboard(rootView: View, onKeyboardVisibilityChanged: (Boolean) -> Unit) {
+        rootView.viewTreeObserver.addOnGlobalLayoutListener {
+            val rect = Rect()
+            rootView.getWindowVisibleDisplayFrame(rect)
+            val screenHeight = rootView.rootView.height
+            val keypadHeight = screenHeight - rect.bottom
+            val isKeyboardNowVisible = keypadHeight > screenHeight * 0.15
+            if (_isKeyboardVisible != isKeyboardNowVisible) {
+                _isKeyboardVisible = isKeyboardNowVisible
+                onKeyboardVisibilityChanged(isKeyboardNowVisible)
+            }
+        }
     }
 }
