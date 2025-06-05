@@ -21,7 +21,6 @@ import java.io.IOException
 
 class MainActivity : AppCompatActivity() {
 
-    // UI components
     private lateinit var toolbar: Toolbar
     private lateinit var titleText: TextView
     private lateinit var customBack: ImageView
@@ -31,32 +30,33 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Initialize toolbar and navigation UI elements
         toolbar = findViewById(R.id.toolbar)
         titleText = findViewById(R.id.custom_title)
         customBack = findViewById(R.id.custom_back)
         bottomNav = findViewById(R.id.bottomNav)
 
+        // Setup the toolbar without default title
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
+        customBack.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
-        customBack.setOnClickListener { onBackPressed() }
-
-        // Listen for any fragment change (including popping back)
+        // Update toolbar and nav whenever fragment stack changes
         supportFragmentManager.addOnBackStackChangedListener {
             updateToolbarAndBottomNav()
         }
 
+        // Load initial fragment depending on intent extra
         if (savedInstanceState == null) {
-            // Determine initial screen based on intent extra ("start") passed to the activity
             when (intent.getStringExtra("start")) {
-                "email" -> loadFragment(EmailSignupFragment(), "Sign up", true, false, addToBackStack = false)
-                "phone" -> loadFragment(PhoneSignupFragment(), "Sign up", true, false, addToBackStack = false)
-                "login" -> loadFragment(LoginFragment(), "Log In", true, false, addToBackStack = false)
-                else -> preloadAndLoadHome()  // Fallback to home if no valid intent extra is provided
+                "email" -> loadFragment(EmailSignupFragment(), "Sign up", true, false, false)
+                "phone" -> loadFragment(PhoneSignupFragment(), "Sign up", true, false, false)
+                "login" -> loadFragment(LoginFragment(), "Log In", true, false, false)
+                else -> preloadAndLoadHome()
             }
         }
 
-        // Set up bottom navigation button actions
+        // Setup bottom navigation listeners
         findViewById<View>(R.id.navHome).setOnClickListener {
             preloadAndLoadHome()
         }
@@ -68,7 +68,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
+    // Handles switching fragments with UI control options
     fun loadFragment(
         fragment: Fragment,
         title: String,
@@ -76,22 +76,18 @@ class MainActivity : AppCompatActivity() {
         showBottomNav: Boolean,
         addToBackStack: Boolean = true
     ) {
-        // Replace current fragment with the new one and optionally add to back stack
         val transaction = supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, fragment)
         if (addToBackStack) transaction.addToBackStack(null)
         transaction.commit()
-
-        // Ensure transaction is completed immediately to avoid UI delays
         supportFragmentManager.executePendingTransactions()
 
-        // Set the initial UI for forward navigation
         titleText.text = title
         customBack.visibility = if (showUpArrow) View.VISIBLE else View.GONE
         bottomNav.visibility = if (showBottomNav) View.VISIBLE else View.GONE
     }
 
-    // Updates toolbar title, up arrow, and bottom nav for current fragment
+    // Adjusts toolbar and bottom nav visibility based on current fragment
     private fun updateToolbarAndBottomNav() {
         val fragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
         when (fragment) {
@@ -111,15 +107,13 @@ class MainActivity : AppCompatActivity() {
                 bottomNav.visibility = View.VISIBLE
             }
             else -> {
-                // For all other fragments: up arrow, no bottom nav
-                // Optionally set title if you wish
                 customBack.visibility = View.VISIBLE
                 bottomNav.visibility = View.GONE
             }
         }
     }
 
-    // Preload routines and go to HomeFragment, using the cached quote only!
+    // Load user data and launch HomeFragment
     fun preloadAndLoadHome() {
         val userPref = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
         val username = userPref.getString("loggedInUser", "guest") ?: "guest"
@@ -133,26 +127,27 @@ class MainActivity : AppCompatActivity() {
         }.start()
     }
 
-
+    // Retrieve motivational quote from API or fallback
     fun fetchAndCacheQuote(onDone: (() -> Unit)? = null) {
         val sharedPref = getSharedPreferences("AppSessionPrefs", Context.MODE_PRIVATE)
         val client = OkHttpClient()
         val url = "http://api.forismatic.com/api/1.0/?method=getQuote&lang=en&format=json"
         val request = Request.Builder().url(url).build()
+
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                val fallbackQuotes = listOf(
+                val fallback = listOf(
                     "No pain, no gain.",
                     "Train insane or remain the same.",
-                    "Push harder than yesterday if you want a different tomorrow.",
+                    "Push harder than yesterday.",
                     "The body achieves what the mind believes.",
                     "Success starts with self-discipline.",
                     "Sweat is fat crying."
-                )
-                val random = fallbackQuotes.random()
-                sharedPref.edit().putString("cachedQuote", random).apply()
+                ).random()
+                sharedPref.edit().putString("cachedQuote", fallback).apply()
                 onDone?.invoke()
             }
+
             override fun onResponse(call: Call, response: Response) {
                 try {
                     val raw = response.body?.string()?.replace("\\\"", "\"")
@@ -162,23 +157,22 @@ class MainActivity : AppCompatActivity() {
                     val full = if (author.isNotEmpty()) "$quote\n\n– $author" else quote
                     sharedPref.edit().putString("cachedQuote", full).apply()
                 } catch (e: Exception) {
-                    val fallbackQuotes = listOf(
+                    val fallback = listOf(
                         "No pain, no gain.",
                         "Train insane or remain the same.",
-                        "Push harder than yesterday if you want a different tomorrow.",
+                        "Push harder than yesterday.",
                         "The body achieves what the mind believes.",
                         "Success starts with self-discipline.",
                         "Sweat is fat crying."
-                    )
-                    val random = fallbackQuotes.random()
-                    sharedPref.edit().putString("cachedQuote", random).apply()
+                    ).random()
+                    sharedPref.edit().putString("cachedQuote", fallback).apply()
                 }
                 onDone?.invoke()
             }
         })
     }
 
-    // Handles back navigation
+    // Custom back navigation handling
     override fun onBackPressed() {
         if (supportFragmentManager.backStackEntryCount > 1) {
             supportFragmentManager.popBackStack()
@@ -187,17 +181,28 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Hide keyboard when touching outside EditText
+    // Handle keyboard visibility and navigation bar visibility on touch
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if (ev.action == MotionEvent.ACTION_DOWN) {
             val v = currentFocus
             if (v is android.widget.EditText) {
                 val outRect = Rect()
                 v.getGlobalVisibleRect(outRect)
+                val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
+
                 if (!outRect.contains(ev.rawX.toInt(), ev.rawY.toInt())) {
+                    // Tap outside input field: hide keyboard and nav bar if in Settings
                     v.clearFocus()
                     val imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
                     imm.hideSoftInputFromWindow(v.windowToken, 0)
+                    if (currentFragment is SettingsFragment) {
+                        bottomNav.visibility = View.GONE
+                    }
+                } else {
+                    // Tap inside input field: keep nav bar if in Settings
+                    if (currentFragment is SettingsFragment) {
+                        bottomNav.visibility = View.VISIBLE
+                    }
                 }
             }
         }
