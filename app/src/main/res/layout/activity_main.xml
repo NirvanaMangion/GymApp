@@ -11,9 +11,11 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:animateLayoutChanges="false">
 
-        <!-- Fixed custom toolbar at the top -->
+
+    <!-- Fixed custom toolbar at the top -->
         <include layout="@layout/custom_toolbar" />
 
         <!-- Fragment container fills available space -->
